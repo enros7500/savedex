@@ -1,3 +1,4 @@
+import { modernEnglish } from './modern-messages';
 export type Language = 'en' | 'es';
 export function languagePreference(value: string | null): Language { return value === 'es' ? 'es' : 'en'; }
 export const english: Record<string, string> = {
@@ -91,6 +92,24 @@ export const english: Record<string, string> = {
 export function translate(value: unknown, language: Language): string {
   const text = value == null ? '' : String(value);
   if (language === 'es') return text;
+  const trimmed = text.trim();
+  const localized = modernEnglish[trimmed] ?? english[trimmed];
+  if (localized) return text.replace(trimmed, localized);
+  const process = /^Procesar (\d+) (vídeo|vídeos)$/.exec(trimmed);
+  if (process) return `Process ${process[1]} ${process[2] === 'vídeo' ? 'video' : 'videos'}`;
+  const age = /^hace (\d+) (min|h|días)$/.exec(trimmed);
+  if (age) return `${age[1]} ${age[2] === 'días' ? 'days' : age[2]} ago`;
+  const valid = /^✓ (\d+) válidos$/.exec(trimmed);
+  if (valid) return `✓ ${valid[1]} valid`;
+  const count = /^· (\d+) (repetidos|no válidos)$/.exec(trimmed);
+  if (count) return `· ${count[1]} ${count[2] === 'repetidos' ? 'duplicates' : 'invalid'}`;
+  const added = /^(\d+) vídeos añadidos a la cola$/.exec(trimmed);
+  if (added) return `${added[1]} videos added to the queue`;
+  const places = /^(\d+) lugares · (.+)$/.exec(trimmed);
+  if (places) return `${places[1]} places · ${translate(places[2], language)}`;
+  for (const [prefix,translation] of [['Guardar: ','Save: '],['Quitar de guardados: ','Unsave: '],['Guardado: ','Saved: '],['Quitado de guardados: ','Unsaved: '],['Ver ','View '],['Ubicación sin confirmar · ','Unconfirmed location · ']] as const) {
+    if (text.startsWith(prefix)) return translation + text.slice(prefix.length);
+  }
   if (english[text]) return english[text];
   const pending = /^(\d+) vídeos pendientes$/.exec(text);
   if (pending) return `${pending[1]} videos pending`;

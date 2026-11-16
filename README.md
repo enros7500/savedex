@@ -1,5 +1,9 @@
 # Savedex
 
+La interfaz abre en inglés por defecto. El selector **English / Español** de la cabecera cambia el idioma sin recargar y guarda la preferencia en este navegador. Los nombres, títulos y evidencias extraídos conservan su idioma original.
+
+La animación de entrada usa solo opacidad para evitar la aparición transitoria de la barra de desplazamiento al cambiar de pestaña. La prueba `pnpm test:e2e:language` comprueba idiomas, persistencia y navegación a 320, 375 y 1280 px con una base temporal; requiere compilar antes la aplicación y tener Chrome o Edge instalado.
+
 Aplicación web local para guardar vídeos de Instagram y YouTube y consultar sus extracciones con evidencia. Diseño aprobado: [recorrido](docs/design/savedex-recorrido.html).
 
 Estado: **aceptación funcional de v1 cerrada**. Verificación automática: 119/119 pruebas y 18 recorridos de navegador. Lote real de diez URLs: cinco success, dos partial y tres errores. Un caso real adicional de top 10 produjo dos ítems y ocho faltantes; su reprocesado exhaustivo conservó ambos resultados y la revisión requerida. Sigue parcial, sin mejora de recuperación. Detalle, límites y evidencias en [acceptance.md](docs/acceptance.md) y [verificación top N](docs/delivery-7-top-n.json).

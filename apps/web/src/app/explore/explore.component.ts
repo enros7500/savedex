@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../core/locale';
 import { Component, computed, inject, signal, HostListener, ElementRef, DestroyRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,7 +8,7 @@ import { categories, matchesSearch, placeSearch, type Place } from './place-mode
 import { labIcons } from '../shared/lab-icons';
 import { PlaceMapComponent } from './map.component';
 import { PlaceDetailComponent } from './place-detail.component';
-@Component({selector:'sx-explore',imports:[FormsModule,RouterLink,NgIcon,PlaceMapComponent,PlaceDetailComponent],viewProviders:[labIcons()],templateUrl:'./explore.component.html'})
+@Component({selector:'sx-explore',imports:[TranslatePipe,FormsModule,RouterLink,NgIcon,PlaceMapComponent,PlaceDetailComponent],viewProviders:[labIcons()],templateUrl:'./explore.component.html'})
 export class ExploreComponent {
  readonly catalog=inject(CatalogStore);private readonly route=inject(ActivatedRoute);private readonly host:ElementRef<HTMLElement>=inject(ElementRef);
  readonly categories=categories;readonly search=signal('');readonly query=signal('');readonly category=signal('');readonly location=signal('');readonly status=signal('');readonly video=signal('');readonly onlySaved=signal(false);readonly sort=signal('relevance');readonly view=signal<'map'|'gallery'>('map');readonly selectedId=signal<string|null>(null);readonly hovered=signal<string|null>(null);

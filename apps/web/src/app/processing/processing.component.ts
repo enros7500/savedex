@@ -1,3 +1,4 @@
+import { TranslatePipe, LocaleService } from '../core/locale';
 import { Component, computed, effect, inject, signal, DestroyRef, untracked } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { NgIcon } from '@ng-icons/core';
@@ -9,9 +10,9 @@ import { labIcons } from '../shared/lab-icons';
 import { stateLabel } from '../core/presentation';
 import { QueueCountComponent } from './queue-count.component';
 import { exceedsVideoLimit } from './recovery';
-@Component({selector:'sx-processing',imports:[RouterLink,NgIcon,QueueCountComponent],viewProviders:[labIcons()],templateUrl:'./processing.component.html'})
+@Component({selector:'sx-processing',imports:[TranslatePipe,RouterLink,NgIcon,QueueCountComponent],viewProviders:[labIcons()],templateUrl:'./processing.component.html'})
 export class ProcessingComponent {
- readonly store=inject(ActivityStore);readonly catalog=inject(CatalogStore);readonly route=inject(ActivatedRoute);readonly label=stateLabel;
+ readonly locale=inject(LocaleService);readonly store=inject(ActivityStore);readonly catalog=inject(CatalogStore);readonly route=inject(ActivatedRoute);readonly label=stateLabel;
  readonly selected=signal<number|null>(null);readonly attempt=signal<number|null>(null);readonly history=signal<PublicRunDetails[]>([]);readonly historyLoading=signal(false);readonly historyError=signal('');readonly filter=signal('all');
  readonly expandedGroup=signal<string|null>(null);
  readonly countsAreLive=signal(false);
@@ -39,15 +40,10 @@ export class ProcessingComponent {
  eventPhase(event:ProgressEvent){return event.phase?({started:'En curso',completed:'Completado',skipped:'Omitido',failed:'Error'}[event.phase]):'Evento registrado';}
  stepLabel(step:string){return this.nodes.find(n=>n.id===step)?.label??step;}
  statusText(state:string){return({done:'Completado',running:'En curso',error:'Error',skipped:'Omitido',pending:'Sin evento registrado',observed:'Evento registrado'} as Record<string,string>)[state];}
- duration(run:PublicRunDetails){return run.finishedAt?((new Date(run.finishedAt).getTime()-new Date(run.startedAt).getTime())/1000).toLocaleString('es',{maximumFractionDigits:1})+' s':'En curso';}
- date(at:string){return new Date(at).toLocaleString('es',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
+ duration(run:PublicRunDetails){return run.finishedAt?((new Date(run.finishedAt).getTime()-new Date(run.startedAt).getTime())/1000).toLocaleString(this.locale.language(),{maximumFractionDigits:1})+' s':'En curso';}
+ date(at:string){return new Date(at).toLocaleString(this.locale.language(),{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});}
  resultCount(run:PublicRunDetails){return run.result?.items.filter(i=>i.type==='place').length??0;}
  visibleRun(video:number){return this.catalog.data()?.videos.find(v=>v.video.id===video)?.run?.id;}
  hasPending(id:number){return this.store.queue()?.entries.some(e=>e.videoId===id&&['pending','processing'].includes(e.state))??false;}
  async retry(id:number){if(this.durationBlocked())return;if(await this.store.act('/videos/'+id+'/retry')){this.attempt.set(null);this.store.notice.set('Vídeo añadido a la cola.');}}
 }
-
-
-
-
-

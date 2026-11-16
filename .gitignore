@@ -20,8 +20,9 @@ temp/
 coverage/
 playwright-report/
 test-results/
-docs/*.json
-!docs/dependency-versions.json
+# Historical reports can contain personal video metadata.
+docs/
+
 __pycache__/
 *.pyc
 *.tsbuildinfo
