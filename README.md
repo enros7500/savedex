@@ -2,6 +2,8 @@
 
 La interfaz abre en inglés por defecto. El selector **English / Español** de la cabecera cambia el idioma sin recargar y guarda la preferencia en este navegador. Los nombres, títulos y evidencias extraídos conservan su idioma original.
 
+Las rutas de navegación son `/#add`, `/#processing`, `/#explore` y `/#results` en ambos idiomas. Los marcadores anteriores en español redirigen a la ruta inglesa conservando sus parámetros.
+
 La animación de entrada usa solo opacidad para evitar la aparición transitoria de la barra de desplazamiento al cambiar de pestaña. La prueba `pnpm test:e2e:language` comprueba idiomas, persistencia y navegación a 320, 375 y 1280 px con una base temporal; requiere compilar antes la aplicación y tener Chrome o Edge instalado.
 
 Aplicación web local para guardar vídeos de Instagram y YouTube y consultar sus extracciones con evidencia. Diseño aprobado: [recorrido](docs/design/savedex-recorrido.html).

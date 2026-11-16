@@ -25,8 +25,8 @@ test('one server provides Angular routes, assets, prefixed API, and correct 404 
   writeFileSync(path.join(webRoot,'.env'),'SECRET=never-expose');
   const app=buildServer(fixture.runtime,undefined,webRoot);
   try{
-    for(const route of ['/','/add','/processing','/library?video=1']){const response=await app.inject(route);assert.equal(response.statusCode,200,route);assert.match(response.headers['content-type']!,/text\/html/);assert.match(response.body,/Savedex Test UI/);}
-    for(const [previous,next] of [['anadir','add'],['procesado','processing'],['biblioteca','library']]){const response=await app.inject('/'+previous+'?video=1');assert.equal(response.statusCode,308);assert.equal(response.headers.location,'/'+next+'?video=1');}
+    for(const route of ['/','/add','/processing','/explore?video=1','/results','/library?video=1']){const response=await app.inject(route);assert.equal(response.statusCode,200,route);assert.match(response.headers['content-type']!,/text\/html/);assert.match(response.body,/Savedex Test UI/);}
+    for(const [previous,next] of [['anadir','add'],['procesado','processing'],['procesamiento','processing'],['explorar','explore'],['biblioteca','explore']]){const response=await app.inject('/'+previous+'?video=1');assert.equal(response.statusCode,308);assert.equal(response.headers.location,'/'+next+'?video=1');}
     const asset=await app.inject('/main-ABC.js');assert.equal(asset.statusCode,200);assert.match(asset.headers['content-type']!,/javascript/);assert.equal(asset.headers['x-content-type-options'],'nosniff');
     const response=await app.inject('/api/queue');assert.equal(response.statusCode,200);assert.equal(response.json().queue.workerStatus,'idle');
     const library=await app.inject('/api/library');assert.equal(library.statusCode,200);assert.match(library.headers['content-type']!,/application\/json/);

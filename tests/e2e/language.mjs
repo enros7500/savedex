@@ -28,13 +28,13 @@ try{
   assert.equal(await b.evaluate("document.querySelector('#language-select').value"),'en');
   assert.ok(await b.evaluate("(()=>{const r=document.querySelector('#language-select').getBoundingClientRect();return r.width>0&&r.left>=0&&r.right<=innerWidth})()"));
   assert.equal(await b.evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
-  for(const [route,en,es] of [['anadir','Add videos','Añadir vídeos'],['procesamiento','Processing','Procesamiento'],['explorar','Explore places','Explorar lugares']]){
+  for(const [route,en,es] of [['add','Add videos','Añadir vídeos'],['processing','Processing','Procesamiento'],['explore','Explore places','Explorar lugares']]){
    await b.click('.lab-nav a[href="#'+route+'"]');await b.waitText(en);
-   const component={anadir:'.add-page',procesamiento:'.processing-layout',explorar:'.explore-page'}[route];
+   const component={add:'.add-page',processing:'.processing-layout',explore:'.explore-page'}[route];
    await until(()=>b.evaluate('!!document.querySelector('+JSON.stringify(component)+')'),'route component');
    const frames=await b.evaluate(`new Promise(resolve=>{const rows=[],start=performance.now();function sample(){const el=document.querySelector(${JSON.stringify(component)});rows.push({height:document.documentElement.scrollHeight,transform:getComputedStyle(el).transform});if(performance.now()-start<350)requestAnimationFrame(sample);else resolve(rows)}sample()})`);
    assert.ok(frames.every(f=>f.transform==='none'),'No scrollbar-producing entry translation');
-   if(route!=='anadir')assert.ok(frames.every(f=>f.height===800),'No transient document scrollbar');
+   if(route!=='add')assert.ok(frames.every(f=>f.height===800),'No transient document scrollbar');
    await b.fill('#language-select','es');await b.waitText(es);
    assert.equal(await b.evaluate('document.documentElement.lang'),'es');
    assert.ok((await b.evaluate('document.title')).includes(es));
@@ -50,6 +50,18 @@ try{
   const screenshot=await b.send('Page.captureScreenshot',{format:'png'});await writeFile(join(output,'english-'+width+'.png'),Buffer.from(screenshot.data,'base64'));
   results.push({width,defaultEnglish:true,switchesWithoutReload:true,persistedBothLanguages:true,noHorizontalOverflow:true});
  }
+ const canonical=[['add','add'],['processing','processing'],['explore','explore'],['results','results']];
+ const aliases=[['anadir','add'],['procesamiento','processing'],['procesado','processing'],['explorar','explore'],['biblioteca','explore'],['library','explore']];
+ for(const [previous,next] of [...canonical,...aliases]){
+  for(const path of ['/'+previous+'?source=bookmark','/#'+previous+'?source=bookmark']){
+   await b.send('Page.navigate',{url:url+path});
+   await until(()=>b.evaluate('location.hash==='+JSON.stringify('#'+next+'?source=bookmark')),'canonical English route '+path);
+   const expected={add:'.add-page',processing:'.processing-layout',explore:'.explore-page',results:'sx-library'}[next];
+   await until(()=>b.evaluate('!!document.querySelector('+JSON.stringify(expected)+')'),'route renders '+path);
+  }
+ }
+ await b.send('Page.navigate',{url:url+'/#explore'});await b.waitText('Explore places');
+ results.push({englishCanonicalRoutes:true,legacyAliasesPreserveQuery:true,pathAndHashBookmarks:true});
  const added=await app.inject({method:'POST',url:'/api/videos',payload:{url:'https://www.youtube.com/watch?v=AbC_123-xyz'}});assert.equal(added.statusCode,201);
  await app.inject({method:'POST',url:'/api/queue/start'});await runtime.queue.whenIdle();
  await writeFile(join(output,'synthetic-snapshot.json'),JSON.stringify(runtime.snapshot(),null,2));

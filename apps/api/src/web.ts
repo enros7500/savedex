@@ -8,8 +8,8 @@ export function webRoutes(app:FastifyInstance,directory:string):void {
   let root:string;
   try{root=realpathSync(directory);if(!statSync(path.join(root,'index.html')).isFile())throw new Error();}
   catch{throw new Error('Falta el build de Angular. Ejecuta scripts/start.ps1 o compila con pnpm build.');}
-  const pages=new Set(['/','/add','/processing','/library']);
-  const previousPages:Record<string,string>={'/anadir':'/add','/procesado':'/processing','/biblioteca':'/library'};
+  const pages=new Set(['/','/add','/processing','/explore','/results','/library']);
+  const previousPages:Record<string,string>={'/anadir':'/add','/procesado':'/processing','/procesamiento':'/processing','/explorar':'/explore','/biblioteca':'/explore'};
   app.get('/*',async(request,reply)=>{
     let pathname:string;
     try{pathname=decodeURIComponent(request.originalUrl.split('?')[0]!);}catch{throw new HttpError(404,'NOT_FOUND','No se encontró el recurso');}
