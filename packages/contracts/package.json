@@ -1,0 +1,25 @@
+{
+  "name": "@savedex/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./events": {
+      "types": "./src/events.ts",
+      "default": "./dist/events.js"
+    },
+    "./api": {
+      "types": "./src/api.ts",
+      "default": "./dist/api.js"
+    },
+    "./schemas/*": "./schemas/*",
+    "./extractor": {
+      "types": "./src/extractor.ts",
+      "default": "./dist/extractor.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  }
+}

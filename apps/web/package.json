@@ -1,0 +1,36 @@
+{
+  "name": "@savedex/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "ng serve --host 127.0.0.1",
+    "build": "ng build",
+    "typecheck": "ngc -p tsconfig.app.json --noEmit"
+  },
+  "dependencies": {
+    "@savedex/contracts": "workspace:*",
+    "@angular/cdk": "22.2.7",
+    "@angular/common": "22.2.5",
+    "@angular/compiler": "22.2.5",
+    "@angular/core": "22.2.5",
+    "@angular/forms": "22.2.5",
+    "@angular/platform-browser": "22.2.5",
+    "@angular/router": "22.2.5",
+    "@ng-icons/core": "36.1.0",
+    "@ng-icons/lucide": "36.1.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "rxjs": "7.8.2",
+    "tailwind-merge": "3.7.0",
+    "tslib": "2.9.1"
+  },
+  "devDependencies": {
+    "@angular/build": "22.2.6",
+    "@angular/cli": "22.2.6",
+    "@angular/compiler-cli": "22.2.5",
+    "@tailwindcss/postcss": "4.3.5",
+    "tailwindcss": "4.3.5",
+    "typescript": "6.0.3",
+    "zard-cli": "1.5.1"
+  }
+}

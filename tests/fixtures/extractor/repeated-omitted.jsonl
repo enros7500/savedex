@@ -1,0 +1,6 @@
+{"event":"step","step":"start","ts":"2026-11-11T13:00:00Z"}
+{"event":"step","step":"description","ts":"2026-11-11T13:00:01Z"}
+{"event":"step","step":"ocr","ts":"2026-11-11T13:00:02Z"}
+{"event":"step","step":"ocr","ts":"2026-11-11T13:00:03Z"}
+{"event":"step","step":"validation","ts":"2026-11-11T13:00:04Z"}
+{"event":"step","step":"finish","ts":"2026-11-11T13:00:05Z","status":"partial","exit_code":2}

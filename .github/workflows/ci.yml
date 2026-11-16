@@ -1,0 +1,29 @@
+name: Windows verification
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  synthetic:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare pinned project tools
+        run: ./scripts/setup.ps1
+      - name: Tests
+        run: ./scripts/pnpm.ps1 test
+      - name: Strict types
+        run: ./scripts/pnpm.ps1 typecheck
+      - name: Production build
+        run: ./scripts/pnpm.ps1 build
+      - name: UI with the production server and simulated extractor
+        env:
+          SAVEDEX_E2E_UNIFIED: '1'
+          SAVEDEX_E2E_DELIVERY: delivery-7
+        run: ./scripts/pnpm.ps1 test:e2e
+      - name: Single start and restart
+        run: ./.tools/node-v22.23.4-win-x64/node.exe scripts/smoke-start.mjs
+      # Real-media acceptance stays explicit and local; CI has no models or credentials.

@@ -1,0 +1,30 @@
+{
+  "name": "savedex",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.6.3",
+  "engines": {
+    "node": "22.23.4",
+    "pnpm": "10.6.3"
+  },
+  "scripts": {
+    "start": "node scripts/start.mjs",
+    "dev": "pnpm --parallel --filter @savedex/api --filter @savedex/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck && tsc -p tsconfig.tests.json",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:e2e": "node tests/e2e/journey.mjs",
+    "contracts:generate": "node scripts/generate-contracts.mjs",
+    "extractor:verify": "python scripts/verify-extractor.py"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3",
+    "@types/node": "22.19.15",
+    "@types/better-sqlite3": "9.6.0",
+    "tsx": "4.23.15",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1",
+    "json-schema-to-typescript": "16.0.0"
+  }
+}

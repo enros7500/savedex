@@ -1,0 +1,9 @@
+{
+  "schema_version": "3.0.0",
+  "request_id": "savedex_synthetic_1",
+  "url": "https://www.instagram.com/p/EXAMPLE1234/",
+  "task": "extract",
+  "output_language": "es",
+  "visual_processing": "auto",
+  "processing_profile": "local_baseline_v1"
+}

@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+onlyBuiltDependencies:
+  - esbuild
+ignoredBuiltDependencies:
+  - better-sqlite3
+  - '@parcel/watcher'
+  - lmdb
+  - msgpackr-extract
+overrides:
+  '@oxc-parser/binding-wasm32-wasi>@emnapi/core': 2.0.0-beta.3
+  '@oxc-parser/binding-wasm32-wasi>@emnapi/runtime': 2.0.0-beta.3

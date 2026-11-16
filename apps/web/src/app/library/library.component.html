@@ -1,0 +1,89 @@
+<div class="library-top">
+<header><h1>Todos los resultados</h1><p>{{'Vídeos guardados y elementos extraídos.' | t}}</p><button z-button zType="outline" class="filter-toggle" [attr.aria-expanded]="filtersOpen()" aria-controls="library-filters" (click)="filtersOpen.set(!filtersOpen())">{{(filtersOpen()?'Ocultar filtros':'Mostrar filtros') | t}}</button></header>
+<form id="library-filters" class="filters" [class.filters-open]="filtersOpen()" (ngSubmit)="submitFilters()" [attr.aria-label]="'Filtros de biblioteca' | t">
+  <div><label for="filter-text">{{'Nombre o descripción' | t}}</label><input z-input id="filter-text" name="text" [(ngModel)]="text" maxlength="1000" type="search" [attr.placeholder]="'Buscar en los ítems' | t"></div>
+  <div><label for="filter-type-control">{{'Tipo' | t}}</label><z-select id="filter-type" name="type" [(ngModel)]="type" [zAriaLabel]="'Tipo' | t" zTriggerId="filter-type-control" [zPlaceholder]="'Todos los tipos' | t" zPosition="popper" zAlign="start"><z-select-item zValue="" [zLabel]="'Todos los tipos' | t">{{'Todos los tipos' | t}}</z-select-item>@for(option of typeOptions;track option[0]){<z-select-item [zValue]="option[0]" [zLabel]="option[1] | t">{{option[1] | t}}</z-select-item>}</z-select></div>
+  <div><label for="filter-from">{{'Incorporado desde' | t}}</label><input z-input id="filter-from" name="from" [(ngModel)]="fromDay" type="date"></div>
+  <div><label for="filter-to">{{'Hasta' | t}}</label><input z-input id="filter-to" name="to" [(ngModel)]="toDay" type="date" [min]="fromDay"></div>
+  <button z-button id="filter-submit" type="submit">{{'Filtrar' | t}}</button>
+</form>
+<div class="section-toolbar"><div class="actions" [attr.aria-label]="'Vista de biblioteca' | t"><button z-button zType="outline" data-view="video" [attr.aria-pressed]="view()==='video'" (click)="view.set('video')">{{'Por vídeo' | t}}</button><button z-button zType="outline" data-view="type" [attr.aria-pressed]="view()==='type'" (click)="view.set('type')">{{'Por tipo' | t}}</button></div><p class="meta">{{(data()?.totalVideos??0) | t}} {{'vídeos ·' | t}} {{(data()?.totalItems??0) | t}} {{'ítems' | t}}</p></div>
+</div>
+<section class="library-results" tabindex="0" [attr.aria-label]="'Resultados de biblioteca' | t">
+@if(selectedVideo()!==null){<p class="feedback">{{'Mostrando el vídeo seleccionado.' | t}} <a routerLink="/results">{{'Ver toda la biblioteca' | t}}</a></p>}
+@if(error()){<div class="error" role="alert"><p>{{(error()) | t}}</p><button z-button zType="outline" (click)="refresh()">{{'Volver a cargar' | t}}</button></div>}
+@if(loading()){<p role="status" class="hint">{{'Actualizando resultados…' | t}}</p>}
+@if(!loading()&&!error()&&!rows().length){<div class="empty"><h2>{{(filters().text||filters().type||filters().fromDay||filters().toDay?'No hay resultados con estos filtros':'Tu biblioteca empieza aquí') | t}}</h2><p>{{'Los resultados aparecerán al terminar una extracción. Puedes seguir en esta sección mientras se procesa.' | t}}</p><a routerLink="/add">{{'Añadir un vídeo' | t}}</a></div>}
+@if(view()==='video'){
+  @for(row of rows();track row.video.id){<article class="result" [attr.data-video]="row.video.id">
+    <div class="video-disclosure" [attr.data-state]="detailId()===row.video.id&&dialogOpen()?'open':'closed'">
+      <button type="button" class="result-summary" data-details aria-haspopup="dialog" [attr.aria-expanded]="detailId()===row.video.id&&dialogOpen()" (click)="openVideo(row.video.id,$event)">
+        <div class="summary-main"><h2 [attr.title]="row.video.title||row.result?.topic?.label||row.video.url">{{row.video.title||row.result?.topic?.label||row.video.url}}</h2>
+          <div class="summary-meta"><span>{{row.video.platform==='youtube'?'YouTube':'Instagram'}}</span><span>{{row.items.length}} {{'ítems' | t}}</span>
+            @if(row.run){
+              @for(collection of row.result?.collections??[];track collection.id){@if(collection.missing_count!==null){<span class="coverage-count" [class.warning]="collection.missing_count>0">{{collection.missing_count}} {{'pendientes de recuperar' | t}}@if((row.result?.collections?.length??0)>1){ · {{collection.label}}}</span>}@else{<span class="coverage-unknown">{{'Faltantes sin cuantificar' | t}}@if((row.result?.collections?.length??0)>1){ · {{collection.label}}}</span>}}
+              @if(!row.result?.collections?.length){<span class="coverage-unknown">{{'Faltantes sin cuantificar' | t}}</span>}
+            }
+          </div>
+        </div>
+        <div class="summary-status"><span class="badge" [attr.data-state]="row.run?.state||row.video.state">{{(row.run?label(row.run.state):label(row.video.state)) | t}}</span>
+          @if(row.run?.review?.required){<span class="warning review-indicator"><ng-icon name="lucideCircleAlert" size="15px" aria-hidden="true"/>{{'Por revisar' | t}}</span>}
+          @if(row.run?.review?.manual==='accepted'){<span class="accepted">{{'Aceptado' | t}}</span>}
+          @if(row.run&&row.latestAttempt?.state==='error'){<span class="error latest-error">{{'Último intento fallido' | t}}</span>}
+          <span class="disclosure-label sr-only"><span class="label-closed">{{'Ver detalles' | t}}</span><span class="label-open">{{'Ocultar detalles' | t}}</span></span>
+        </div>
+      </button></div></article>}
+} @else {
+  @for(group of groups();track group.type){<section class="type-group"><h2>{{(group.label) | t}} · {{(group.items.length) | t}}</h2>@for(row of group.items;track row.item.id){<div class="typed-item"><a routerLink="/results" [queryParams]="{video:row.video.id}">{{row.video.title||row.video.url}}</a><sx-item [item]="row.item"/></div>}</section>}
+}
+</section>
+<z-dialog [zVisible]="dialogOpen()" (zVisibleChange)="dialogOpen.set($event)" (zAfterClose)="afterCloseVideo()" [zClosable]="false" zWidth="min(880px, calc(100vw - 24px))" class="library-dialog">
+@if(detailRow();as row){
+  <z-dialog-header class="video-dialog-header">
+    <div class="dialog-title-row"><z-dialog-title>{{row.video.title||row.result?.topic?.label||row.video.url}}</z-dialog-title><div class="dialog-tools">
+      <button type="button" z-button zType="ghost" z-dropdown [zDropdownMenu]="videoMenu" data-video-actions [attr.aria-label]="'Acciones del vídeo' | t" [zTooltip]="'Acciones' | t"><ng-icon name="lucideEllipsis" size="20px" aria-hidden="true"/></button>
+      <button type="button" z-button zType="ghost" z-dialog-close data-close-video [attr.aria-label]="'Cerrar detalles' | t"><ng-icon name="lucideX" size="20px" aria-hidden="true"/></button>
+    </div></div>
+    <z-dialog-description>{{row.video.platform==='youtube'?'YouTube':'Instagram'}} · {{row.items.length}} {{'ítems' | t}}<span class="badge" [attr.data-state]="row.run?.state||row.video.state">{{(row.run?label(row.run.state):label(row.video.state)) | t}}</span></z-dialog-description>
+    <nav class="detail-tabs" [attr.aria-label]="'Vista del vídeo' | t"><button type="button" z-button zType="ghost" data-detail-tab="result" [attr.aria-pressed]="detailTab()==='result'" (click)="detailTab.set('result')">{{'Resultado' | t}}</button><button type="button" z-button zType="ghost" data-detail-tab="history" data-action="history" [attr.aria-pressed]="detailTab()==='history'" (click)="openHistory(row.video.id)">{{'Historial' | t}}</button></nav>
+  </z-dialog-header>
+  <div class="video-dialog-body">
+  @if(detailTab()==='result'){
+    @if(row.latestAttempt?.state==='error'){<p class="error attempt-notice">{{'El último intento falló.' | t}} @if(row.run){ {{'Se conserva el resultado válido anterior.' | t}} }</p>}
+    @if(row.run;as run){
+      <div class="displayed-result"><span>{{'Resultado mostrado' | t}} · #{{run.id}} · {{(run.mode==='exhaustive'?'Exhaustivo':'Normal') | t}}</span><time>{{formatTime(run.finishedAt||run.startedAt)}}</time></div>
+      @if(run.review.manual==='accepted'){<p class="accepted">{{'Aceptado · Ejecución' | t}} {{run.id}}</p>}
+      @if(run.review.required){<p class="warning review-state"><ng-icon name="lucideCircleAlert" size="15px" aria-hidden="true"/>{{'Por revisar' | t}}</p>}
+      @for(collection of row.result?.collections??[];track collection.id){<p class="collection">{{collection.label}} · {{collection.item_ids.length}} {{'recuperados' | t}}@if(collection.expected_count!==null){ {{'de' | t}} {{collection.expected_count}}}@if(collection.missing_count){ · {{collection.missing_count}} {{'pendientes de recuperar' | t}}}@if(collection.missing_count===null){ · {{'Faltantes sin cuantificar' | t}}}</p>}
+      <div class="items">@for(item of row.items;track item.id){<sx-item [item]="item"/>}@empty{<p>{{'No hay ítems en esta extracción.' | t}}</p>}</div>
+      @if(warningMessages(row).length){<div z-collapsible class="result-notes" [zOpen]="run.review.required"><button type="button" z-collapsible-trigger>{{'Advertencias y cobertura' | t}} · {{warningMessages(row).length}}</button><z-collapsible-content><ul>@for(message of warningMessages(row);track message){<li>{{message}}</li>}</ul></z-collapsible-content></div>}
+    }@else{<p class="empty-dialog">{{(row.video.state==='processing'?'Este vídeo se está procesando.':'Todavía no hay un resultado válido.') | t}}</p>}
+  }@else{
+    <section class="dialog-history" aria-labelledby="history-heading"><h2 id="history-heading" class="sr-only">{{'Historial de extracciones' | t}}</h2>
+    @if(historyLoading()){<p role="status">{{'Cargando historial…' | t}}</p>}
+    @if(historyError()){<p role="alert" class="error">{{historyError() | t}}</p>}
+    @for(run of runs();track run.id){<article z-collapsible class="history-run" [attr.data-run]="run.id"><button type="button" z-collapsible-trigger class="history-run-summary"><span>{{'Ejecución' | t}} #{{run.id}} · {{(run.mode==='exhaustive'?'Exhaustivo':'Normal') | t}}<time>{{formatTime(run.startedAt)}}</time></span><span class="badge">{{label(run.state) | t}}</span></button><z-collapsible-content><div class="history-run-details">
+      @if(run.errorMessage){<p class="error">{{run.errorMessage | t}}</p>}
+      @if(run.review.manual==='accepted'){<p class="accepted">{{'Aceptado' | t}}</p>}
+      @for(reason of run.review.reasons;track $index){<p class="warning">{{reasonText(reason)}}</p>}
+      @for(item of run.result?.items??[];track item.id){<p>{{item.title}} · {{item.summary}}</p>}@empty{<p>{{'Sin ítems disponibles.' | t}}</p>}
+      @if(run.resultAvailable){<a [href]="'/api/runs/'+run.id+'/result'" download>{{'Descargar JSON de esta ejecución' | t}}</a>}
+    </div></z-collapsible-content></article>}
+    </section>
+  }
+  </div>
+  <z-dropdown-menu-content #videoMenu="zDropdownMenuContent" zAlign="end" class="video-actions-menu">
+    <button z-dropdown-menu-item (click)="openSource(row.video.url)">{{'Abrir vídeo original' | t}}</button>
+    @if(detailTab()==='result'&&row.run;as run){
+      <button z-dropdown-menu-item data-action="accept" [disabled]="!store.connected()||store.busy()||run.review.manual==='accepted'" [zDisabled]="!store.connected()||store.busy()||run.review.manual==='accepted'" (click)="review(run.id,'accepted')">{{'Aceptar extracción' | t}}</button>
+      <button z-dropdown-menu-item data-action="mark-review" [disabled]="!store.connected()||store.busy()||run.review.manual==='review'" [zDisabled]="!store.connected()||store.busy()||run.review.manual==='review'" (click)="review(run.id,'review')">{{'Marcar para revisar' | t}}</button>
+      @if(run.review.manual!=='none'){<button z-dropdown-menu-item [disabled]="!store.connected()||store.busy()" [zDisabled]="!store.connected()||store.busy()" (click)="review(run.id,'none')">{{'Restablecer revisión automática' | t}}</button>}
+      <button z-dropdown-menu-item data-action="download-original" (click)="downloadOriginal(run.id)">{{'Descargar JSON original' | t}}</button>
+    }
+    <z-dropdown-menu-separator/>
+    <button z-dropdown-menu-item data-action="exhaustive" [disabled]="!store.connected()||store.busy()||hasTask(row.video.id)" [zDisabled]="!store.connected()||store.busy()||hasTask(row.video.id)" (click)="enqueue(row.video.id,'exhaustive')">{{'Reprocesar exhaustivo' | t}}</button>
+    <button z-dropdown-menu-item [disabled]="!store.connected()||store.busy()||hasTask(row.video.id)" [zDisabled]="!store.connected()||store.busy()||hasTask(row.video.id)" (click)="enqueue(row.video.id)">{{'Volver a encolar' | t}}</button>
+  </z-dropdown-menu-content>
+}
+</z-dialog>
+

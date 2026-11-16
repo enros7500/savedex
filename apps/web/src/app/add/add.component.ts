@@ -1,0 +1,41 @@
+import { Component, computed, DestroyRef, HostListener, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { NgIcon } from '@ng-icons/core';
+import { ActivityStore } from '../core/activity-store';
+import { Toasts } from '../core/toasts';
+import { parseLinks } from '../explore/place-model';
+import { labIcons } from '../shared/lab-icons';
+import { stateLabel } from '../core/presentation';
+@Component({selector:'sx-add',imports:[FormsModule,RouterLink,NgIcon],viewProviders:[labIcons()],template:`
+<div class="add-page page-enter"><header class="page-heading"><p class="eyebrow">DEL VÍDEO AL LUGAR</p><h1>Añadir vídeos</h1><p>Pega los enlaces. El extractor se encarga del resto.</p></header>
+<div class="add-layout"><div class="add-main"><section class="input-card"><div class="card-title"><span class="icon-tile"><ng-icon name="lucideLink" size="19"/></span><div><h2>¿Qué has descubierto?</h2><p>Un vídeo, varios enlaces o ese mensaje lleno de recomendaciones.</p></div></div>
+<form (ngSubmit)="submit()"><label for="url">Enlaces de vídeos</label><div class="paste-area" [class.dragging]="dragging()" (dragover)="dragOver($event)" (dragleave)="dragging.set(false)" (drop)="drop($event)"><textarea id="url" name="urls" [ngModel]="text()" (ngModelChange)="text.set($event)" rows="7" placeholder="https://www.youtube.com/watch?v=…&#10;https://www.instagram.com/reel/…&#10;&#10;Pega o arrastra aquí tus enlaces" aria-describedby="url-hint" [disabled]="saving()"></textarea><div class="textarea-foot"><ng-icon name="lucideClipboard" size="14"/><span>Separa los enlaces con espacios, comas o saltos de línea</span></div></div>
+<p id="url-hint" class="muted small platform-note"><span class="platform youtube">YT</span> YouTube <span class="platform instagram">IG</span> Instagram <span>· Máximo 5 min por vídeo</span></p>
+@if(rows().length){<div class="validation-summary" aria-live="polite"><span class="ok">✓ {{valid().length}} válidos</span>@if(duplicates()){<span>· {{duplicates()}} repetidos</span>}@if(invalid()){<span class="error">· {{invalid()}} no válidos</span>}</div><div class="validation-list">@for(row of rows();track $index){<div class="validation-row" [class.duplicate]="row.status==='duplicate'" [class.invalid]="row.status==='invalid'"><span class="platform" [class.youtube]="row.platform==='YouTube'" [class.instagram]="row.platform==='Instagram'">{{row.platform==='YouTube'?'YT':row.platform==='Instagram'?'IG':row.platform?'↗':'!'}}</span><code>{{row.raw}}</code><span class="small">{{row.status==='duplicate'?'Ya añadido':row.status==='invalid'?'No es un enlace de vídeo':row.status==='unsupported'?'Aún no disponible':row.platform}}</span></div>}</div>}
+@if(error()){<p class="inline-error" role="alert">{{error()}}</p>}
+<div class="submit-row"><button class="btn primary large" id="add-submit" type="submit" [disabled]="!valid().length||saving()||!store.connected()"><ng-icon [name]="saving()?'lucideLoaderCircle':'lucidePlus'" [class.spin]="saving()" size="18"/>{{saving()?'Añadiendo…':'Procesar '+valid().length+' '+(valid().length===1?'vídeo':'vídeos')}}</button><span class="shortcut"><kbd>Ctrl</kbd> + <kbd>↵</kbd></span></div>
+@if(store.running()){<p class="small muted">Hay un vídeo en curso. Los nuevos enlaces quedarán pendientes para el siguiente inicio de cola.</p>}
+</form></section>
+<section class="how-section"><p class="eyebrow">TÚ PEGAS. EL EXTRACTOR TRABAJA.</p><div class="how-grid"><article><span>1</span><h3>Entiende cada vídeo</h3><p>Revisa la descripción y el contenido disponible.</p></article><article><span>2</span><h3>Extrae lo que importa</h3><p>Conserva los lugares y las menciones con su fuente.</p></article><article><span>3</span><h3>Explora a tu manera</h3><p>Busca los lugares y vuelve al vídeo cuando lo necesites.</p></article></div></section>
+</div><aside class="add-aside"><section class="side-card"><div class="side-heading"><ng-icon name="lucideSparkles" size="16"/><h2>Temas que encontrarás</h2></div><p class="small muted">El catálogo destaca los lugares extraídos de tus vídeos.</p><div class="topic-row"><span class="topic-icon green"><ng-icon name="lucideMapPin" size="19"/></span><div><strong>Lugares para visitar</strong><p>Barrios, naturaleza, cultura y vistas.</p></div><span class="badge green">Activo</span></div><div class="topic-row"><span class="topic-icon orange"><ng-icon name="lucideUtensils" size="19"/></span><div><strong>Restaurantes y comida</strong><p>Sitios para comer y descubrir sabores.</p></div><span class="badge green">Activo</span></div><div class="side-divider"></div><p class="eyebrow">MÁS ALLÁ DE LOS LUGARES</p><a class="future-topic" routerLink="/results"><ng-icon name="lucideCode" size="17"/><span>Herramientas y otros resultados</span><ng-icon name="lucideArrowUpRight" size="14"/></a><p class="small muted">El extractor actual conserva todos los temas. Puedes consultarlos en Todos los resultados.</p></section>
+<section class="side-card"><div class="side-heading"><ng-icon name="lucideClock3" size="16"/><h2>Añadidos recientemente</h2></div>@for(video of recent();track video.id){<a class="recent-row" routerLink="/procesamiento" [queryParams]="{video:video.id}"><span class="platform" [class.youtube]="video.platform==='youtube'" [class.instagram]="video.platform==='instagram'">{{video.platform==='youtube'?'YT':'IG'}}</span><span><strong [class.unresolved]="!video.title">{{video.title||video.url}}</strong><span class="small muted">{{label(video.state)}} · {{age(video.addedAt)}}</span></span><ng-icon name="lucideChevronRight" size="14"/></a>}@empty{<div class="small muted recent-empty">Aquí aparecerán los vídeos que añadas.</div>}</section></aside></div></div>
+`})
+export class AddComponent {
+ readonly store=inject(ActivityStore);readonly toast=inject(Toasts);readonly router=inject(Router);readonly label=stateLabel;
+ readonly text=signal('');readonly saving=signal(false);readonly error=signal('');readonly dragging=signal(false);readonly now=signal(Date.now());
+ readonly rows=computed(()=>parseLinks(this.text(),this.store.snapshot()?.videos.map(v=>v.url)??[]));readonly valid=computed(()=>this.rows().filter(r=>r.status==='valid'));readonly duplicates=computed(()=>this.rows().filter(r=>r.status==='duplicate').length);readonly invalid=computed(()=>this.rows().filter(r=>r.status==='invalid'||r.status==='unsupported').length);
+ readonly recent=computed(()=>[...(this.store.snapshot()?.videos??[])].sort((a,b)=>b.addedAt.localeCompare(a.addedAt)).slice(0,6));
+ constructor(){const timer=setInterval(()=>this.now.set(Date.now()),15000);inject(DestroyRef).onDestroy(()=>clearInterval(timer));}
+ age(at:string){const n=Math.max(0,Math.floor((this.now()-new Date(at).getTime())/60000));return n<1?'ahora':n<60?'hace '+n+' min':n<1440?'hace '+Math.floor(n/60)+' h':'hace '+Math.floor(n/1440)+' días';}
+ @HostListener('document:keydown',['$event']) key(e:KeyboardEvent){if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();void this.submit();}}
+ dragOver(e:DragEvent){e.preventDefault();this.dragging.set(true);}
+ drop(e:DragEvent){e.preventDefault();this.dragging.set(false);const text=e.dataTransfer?.getData('text/uri-list')||e.dataTransfer?.getData('text/plain');if(text)this.text.update(t=>t+(t?'\n':'')+text);}
+ async submit(){if(this.saving()||!this.store.connected()||!this.valid().length)return;const rows=[...this.valid()];this.saving.set(true);this.error.set('');const failed:string[]=[];let count=0;
+ for(const row of rows){try{const added=await this.store.api.add(row.url);if(added.created)count++;}catch(e){failed.push(row.url);this.error.set(e instanceof Error?e.message:'No se pudo añadir el vídeo.');}}
+ this.text.set([...this.rows().filter(r=>r.status==='invalid'||r.status==='unsupported').map(r=>r.raw),...failed].join('\n'));
+ if(count){this.toast.show(count+' vídeos añadidos a la cola','Ver progreso',()=>void this.router.navigate(['/procesamiento']));if(!this.store.running()&&this.store.queue()?.workerStatus!=='faulted')await this.store.act('/queue/start');}
+ else if(!failed.length)this.toast.show('Los enlaces ya estaban añadidos.');this.saving.set(false);
+ }
+}
+
