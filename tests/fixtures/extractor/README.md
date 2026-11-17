@@ -1,5 +1,7 @@
-Fixtures sintéticos: success/partial/error proceden de examples/ del extractor (licencia MIT, copia en packages/contracts/schemas/EXTRACTOR-LICENSE). URLs y autores son ficticios. No representan extracciones reales realizadas por Savedex.
+# Synthetic extractor fixtures
 
-empty-success es un resultado sintético válido sin ítems, derivado de la plantilla de error con cobertura suficiente, sin issues y con status success. request envía output_language=es explícitamente. repeated-omitted es una traza construida según progress.py/cli.py/worker.py; OCR se repite y transcription no se observa. La ausencia de un evento no permite deducir que su fase esté omitida.
+`success`, `partial` and `error` come from the extractor's `examples/` directory (MIT license; a copy is stored at `packages/contracts/schemas/EXTRACTOR-LICENSE`). URLs and authors are fictional. These fixtures do not represent real extractions performed by SaveDex.
 
-El CLI real valida los cuatro resultados estructural y semánticamente mediante scripts/verify-extractor.py. summary comprueba los códigos 0/2/65 sobre resultados guardados; no es una extracción de medios. extract se invoca separadamente con una solicitud inválida controlada (64), sin modelos ni red de plataformas.
+`empty-success` is a valid synthetic result with no items, derived from the error template with sufficient coverage, no issues and `status: success`. `request` explicitly sets `output_language=es` to exercise Spanish output. `repeated-omitted` is a trace constructed from `progress.py`, `cli.py` and `worker.py`; OCR repeats and transcription is not observed. A missing event does not establish that its phase was skipped.
+
+The real CLI validates all four results structurally and semantically through `scripts/verify-extractor.py`. `summary` checks exit codes 0/2/65 against saved results; it does not extract media. `extract` is invoked separately with a controlled invalid request (exit code 64), without models or platform network access.

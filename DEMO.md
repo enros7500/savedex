@@ -1,6 +1,6 @@
 # SaveDex demo on GitHub Pages
 
-The public demo lives at https://enros7500.github.io/savedex/.
+The public demo lives on [GitHub Pages](https://enros7500.github.io/savedex/).
 
 The complete project is stored in this repository. Pages publishes **only** the static Angular demo build, never the local API, database, extractor, Codex session or environment files.
 
@@ -40,4 +40,4 @@ $env:SAVEDEX_DEMO_BASE_PATH='/savedex/'
 
 The browser test serves the app beneath the Pages subdirectory, checks the logo and full user journey, locates all five museums, verifies English despite a stored Spanish preference, checks mobile layout/reduced motion, tests reset/reload and rejects API/SSE/fetch calls. Explicit visitor clicks on Google Maps can open that external website.
 
-Generated bundles, local tools, environment files, historical reports and database files are excluded from Git. The former ChatGPT Sites demo was made owner-private and is no longer the public deployment.
+Generated bundles, local tools, environment files, historical reports and database files are excluded from Git. Screenshots published in the README use only the demo's illustrative dataset.
