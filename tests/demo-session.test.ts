@@ -11,6 +11,7 @@ test('museum result and discard notices are translated completely into English',
   assert.equal(translate('Todos','en'),'All');
   assert.equal(translate('Errores','en'),'Errors');
   assert.equal(translate('Ver','en'),'View');
+  assert.equal(translate('Descripción','en'),'Description');
   assert.equal(translate('5 lugares disponibles de «Top 5 museums in Madrid»','en'),'5 places available from “Top 5 museums in Madrid”');
   assert.equal(translate('«Museo Sorolla» descartado','en'),'“Museo Sorolla” discarded');
 });

@@ -1,6 +1,6 @@
 /** Application UI only; extracted names, descriptions and evidence stay literal. */
 export const modernEnglish: Record<string,string> = {
- 'Todos':'All','Errores':'Errors','Ver':'View',
+ 'Todos':'All','Errores':'Errors','Ver':'View','Descripción':'Description',
  'EJECUCIÓN':'RUN','Siguiendo los pasos activos':'Following active steps','Abrir todo':'Expand all','Colapsar todo':'Collapse all','Seguir actividad':'Follow activity',
  'Este paso todavía no tiene un evento registrado.':'No event has been recorded for this step yet.','Reproducir vídeo original':'Play original video',
  'Más categorías':'More categories','Menos categorías':'Fewer categories',
