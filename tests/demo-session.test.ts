@@ -8,6 +8,9 @@ const wait = async (check:()=>boolean) => { for(let i=0;i<100;i++){if(check())re
 const library = async (s:DemoSession) => (await s.request('/library') as {library:ApiLibraryResult}).library;
 
 test('museum result and discard notices are translated completely into English',()=>{
+  assert.equal(translate('Todos','en'),'All');
+  assert.equal(translate('Errores','en'),'Errors');
+  assert.equal(translate('Ver','en'),'View');
   assert.equal(translate('5 lugares disponibles de «Top 5 museums in Madrid»','en'),'5 places available from “Top 5 museums in Madrid”');
   assert.equal(translate('«Museo Sorolla» descartado','en'),'“Museo Sorolla” discarded');
 });

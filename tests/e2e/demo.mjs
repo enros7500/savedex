@@ -31,6 +31,7 @@ try{
   assert.equal(await b.evaluate('document.querySelector("#url").readOnly'),true);
   assert.ok((await b.evaluate('document.querySelector("#url").value')).includes('••••'));
   await shot('add-desktop');await b.click('#add-submit');await b.waitText('Start queue');
+  assert.equal(await b.evaluate('document.querySelectorAll(".queue-chips button")[0].textContent.trim()'),'All 1');
   assert.equal(await b.evaluate('location.hash'),'#processing');
   await b.click('[data-action=start]');await until(()=>b.evaluate('!!document.querySelector("[data-queue-group=active]")'),'active simulated processing');
   await until(()=>b.evaluate('!!document.querySelector(".trail-complete")'),'completed demo',15000);
