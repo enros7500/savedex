@@ -20,6 +20,9 @@ const shot=async name=>{const r=await b.send('Page.captureScreenshot',{format:'p
 const nav=async route=>{await b.send('Page.navigate',{url:origin+'/#'+route});};
 try{
   b=await browser();await b.send('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  // Hosted Windows runners can disable animations at OS level. Exercise both
+  // preferences explicitly instead of inheriting the runner's desktop setting.
+  await b.send('Emulation.setEmulatedMedia',{features:[{name:'prefers-reduced-motion',value:'no-preference'}]});
   await b.send('Page.addScriptToEvaluateOnNewDocument',{source:`localStorage.setItem('savedex-language','es');window.demoNetworkAttempts=[];window.fetch=(...a)=>{window.demoNetworkAttempts.push('fetch:'+a[0]);return Promise.reject(Error('Unexpected network call'));};window.EventSource=class{constructor(url){window.demoNetworkAttempts.push('SSE:'+url);throw Error('Unexpected SSE');}};`});
   await nav('add');await b.waitText('DEMO ONLY');await b.waitText('Try the demo');
   assert.equal(await b.evaluate('document.documentElement.lang'),'en');
