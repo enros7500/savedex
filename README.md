@@ -1,58 +1,79 @@
 # SaveDex
 
-A local web app for turning saved Instagram and YouTube videos into a searchable place library. Review extracted information with its supporting evidence, explore places on a map and research missing location details with a local agent.
+**Turn saved Instagram and YouTube videos into a searchable place library.**
 
-## Live demo
+Review extracted information and its supporting evidence, explore places on a map, and research missing location details with a local agent.
 
-[Try the public demo](https://enros7500.github.io/savedex/). It uses a fixed, illustrative dataset of five Madrid museums and can be reset at any time.
+[**Try the live demo**](https://enros7500.github.io/savedex/) · [**Watch the walkthrough**](#walkthrough) · [**Run locally**](#run-locally)
 
-**DEMO ONLY — This is a simulation. No real processing or AI calls are made.** The sample video URL is masked, processing is simulated and agent responses are predefined. Museum names and coordinates illustrate the interface; they are not a ranking or current travel guidance.
+> **Demo only:** The public demo uses five illustrative Madrid museums. Video processing and agent responses are simulated; no real processing or AI calls are made. The sample URL is masked, and the data is not current travel guidance.
 
-## Screenshots
+[![SaveDex showing five sample Madrid museums with researched locations on the map](assets/readme/explore.png)](https://enros7500.github.io/savedex/)
 
-All screens show the English demo with illustrative data. No personal library or real extraction results are shown.
+*The demo after running its five predefined research responses. Locations are added by simulated research, separately from the original sample extraction.*
 
-**Explore places**
+## Walkthrough
 
-![SaveDex Explore view with five sample museums, location filters and a map](assets/readme/explore.png)
+See the result first, then follow the current English demo from its fixed sample video through processing, five museum results and simulated location research.
+
+![Animated SaveDex walkthrough: add the sample video, follow processing, explore five museums and reveal predefined map locations](assets/readme/walkthrough.gif)
+
+*Recorded from the actual demo interface with illustrative data. The animation preserves the simulation notices; it does not show real extraction or live research.*
+
+[Try the same journey yourself →](https://enros7500.github.io/savedex/)
+
+## From saved video to useful places
+
+### Recover places from saved videos
+
+Add an Instagram or YouTube URL to the local app and start the processing queue when you are ready. Extracted places become a searchable library. Follow each video's progress and review incomplete results.
 
 <details>
-<summary>Add a video</summary>
+<summary>See the sample input and completed processing</summary>
 
-![Add a video in the demo with a masked sample URL and a simulation notice](assets/readme/add.png)
+![Current English demo with its fixed masked sample video and simulation notice](assets/readme/add.png)
+
+![Completed simulated processing for the sample video and its five museum results](assets/readme/processing.png)
 
 </details>
 
-<details>
-<summary>Processing: follow a video's progress</summary>
+### Review information in context
 
-![Simulated processing with a completed video and five extracted sample places](assets/readme/processing.png)
+Search and filter places, open their details, and trace them back to the source video. The local app retains the extractor's supporting evidence and review reasons. Missing details stay missing until additional information is available.
+
+The public demo illustrates the interface with fixed sample content; it does not demonstrate extraction accuracy or real source evidence.
+
+### Research missing location details
+
+Use place research to investigate a place's location and description in the local app. Research is stored separately from the original extraction, and ambiguous matches remain pending review. In the demo, **Ask the Agent** reveals a predefined response.
+
+<details>
+<summary>See a predefined research response in the demo</summary>
+
+![Prado Museum details showing its predefined research response, address and map location, with simulation notices](assets/readme/place-agent.png)
 
 </details>
 
-<details>
-<summary>Place details: review a simulated agent response</summary>
+## Try the demo
 
-![Prado Museum details with a predefined agent response and a simulation notice](assets/readme/place-agent.png)
+[Open the public demo](https://enros7500.github.io/savedex/) — no account or local setup needed.
 
-</details>
+1. Add the fixed sample video, then select **Start queue**.
+2. Wait for simulated processing to finish and open **Explore places** to find five Madrid museums.
+3. Open a museum and select **Ask the Agent**. Its predefined response adds an address and map location.
+4. Repeat for the other museums to populate the map, or select **Restart demo** to begin again.
 
-## Local app and public-demo build
-
-Both versions use the same source and main branch. They are selected at build time, not by a URL parameter or an in-app switch.
+Each visitor has an independent temporary session. Restart or reload clears it. The demo cannot process your own URLs, download videos or invoke models. Explicit links such as Google Maps open an external website.
 
 | | Local app | Public demo |
 |---|---|---|
-| Video input | Instagram and YouTube URLs | One fixed, masked sample |
+| Input | Instagram and YouTube URLs | One fixed, masked sample |
 | Processing | Existing local extractor | Browser-only simulation |
 | Place research | Installed Codex CLI and its session | Predefined responses |
-| Library storage | Local SQLite database | In memory; reset on reload |
-| Interface language | English by default; Spanish available | English only |
-| Backend connection | Local HTTP API and SSE | None |
+| Storage | Local SQLite database | In memory; reset on reload |
+| Language | English or Spanish | English |
 
-**Restart demo** restores the initial state. Each visitor has an independent temporary session. The demo does not download videos, invoke the extractor or models, or connect to the local API. Visitor-initiated links such as Google Maps open an external website.
-
-In the local app, extracted names, titles and evidence retain their source language. The **English / Español** selector stores the interface preference in the browser. Routes use `/#add`, `/#processing`, `/#explore` and `/#results`; older Spanish bookmarks redirect while preserving parameters.
+[Demo runtime and hosting](DEMO.md) · [Local app behavior and privacy](LOCAL-APP.md)
 
 ## Run locally
 
@@ -75,99 +96,10 @@ Open [SaveDex locally](http://127.0.0.1:3210), or the address printed at startup
 
 Setup installs portable Node 22.23.4 and pnpm 10.6.3 under `.tools`, verifies the official download and installs locked dependencies. Existing installations of those versions can also run `pnpm install --frozen-lockfile`.
 
-### Development and demo builds
+## Documentation
 
-After building once, run `.\scripts\pnpm.ps1 dev` for live reload. Angular listens on `127.0.0.1:4200` and proxies `/api` to port 3210. Update `apps/web/proxy.conf.json` if the backend port changes.
+- [Local app guide](LOCAL-APP.md): processing, research, language, privacy and backups.
+- [Development and validation](DEVELOPMENT.md): builds, tests, project structure and tentative roadmap.
+- [Public demo guide](DEMO.md): isolated runtime, GitHub Pages publication and media refresh.
 
-```powershell
-# Local application
-.\scripts\pnpm.ps1 build
-
-# Static demo hosted at /
-.\scripts\pnpm.ps1 build:demo
-
-# Static demo hosted at /savedex/
-.\scripts\pnpm.ps1 build:demo:pages
-```
-
-Both demo commands write to `apps/web/dist-demo/browser/`, separately from the normal application build. Serve that directory from a static host. Demo transport and data are replaced at build time; details are in [DEMO.md](DEMO.md).
-
-### Automatic publication
-
-The [Demo · GitHub Pages workflow](.github/workflows/demo-pages.yml) runs for relevant pushes to `main` and can also be started manually. It checks types, runs synthetic tests, builds the app and demo, and verifies the demo in a browser before publishing. Documentation-only changes do not redeploy.
-
-Only `apps/web/dist-demo/browser/` is uploaded. Environment files, SQLite databases, local extractor configuration and Codex sessions are outside the hosted artifact. Deployment uses GitHub's short-lived Pages permissions. Shared interface improvements reach the demo through the same main branch.
-
-## Processing and place research
-
-Videos are processed sequentially. **Stop** lets the active video finish before pausing the queue. Ctrl+C requests backend shutdown after the active video; closing the browser does not stop extraction. Removing a completed attempt from Processing hides it in that browser while retaining history and providing Undo. Pending or active work stays visible.
-
-Instagram titles use public HTML metadata without downloading media. If metadata is unavailable, the URL remains the title. A title never counts as an extracted place. Completed attempts without places appear under **Needs attention**.
-
-Place research uses the installed Codex CLI, its existing ChatGPT session and `gpt-6-sol`. It consumes session usage and consults web sources using the place's name, address and location context. Confirmed coordinates, descriptions and sources are stored separately from the original extraction; ambiguous places remain pending review. Up to two photos may be returned when their reuse can be confirmed.
-
-Research runs one task at a time in an ephemeral read-only sandbox with a 180-second limit. Interrupted tasks can be retried and do not restart automatically. Set `SAVEDEX_CODEX_EXE` in `.env` to override the CLI path.
-
-## Validation
-
-```powershell
-.\scripts\pnpm.ps1 typecheck
-.\scripts\pnpm.ps1 test
-.\scripts\pnpm.ps1 build
-.\scripts\pnpm.ps1 test:e2e:all
-```
-
-Browser journeys cover processing, catalog, language persistence, place research and contextual extraction. They use temporary SQLite databases and simulated extractors/agents. Reports and screenshots stay under `.cache/`. These checks do not process personal data or invoke models.
-
-To validate the Pages demo separately:
-
-```powershell
-.\scripts\pnpm.ps1 build:demo:pages
-$env:SAVEDEX_DEMO_BASE_PATH='/savedex/'
-.\scripts\pnpm.ps1 test:e2e:demo
-```
-
-The demo suite checks the full journey, five agent responses, English despite a stored Spanish preference, mobile layout, reduced motion, reset/reload and the absence of API/SSE/fetch calls or external resource requests.
-
-<details>
-<summary>Extractor verification and historical acceptance</summary>
-
-```powershell
-.\scripts\pnpm.ps1 extractor:verify
-.\scripts\pnpm.ps1 contracts:generate
-```
-
-Extractor verification expects the sibling repository `../savedex-extractor` with its existing Windows installation under `work/asr-venv`. It checks synthetic fixtures, version, diagnostics and a controlled invalid request without processing real URLs or changing extractor code. Generated TypeScript types follow the extractor's JSON Schemas; progress events use a separate protocol.
-
-The default extractor budget is 900 seconds plus a 20-second shutdown grace period. A `partial` result with exit code 2 is valid and retains its review reasons. Schema checks cover structure; extractor validation also checks references and semantic rules.
-
-Historical real-media acceptance covered ten URLs: five successes, two partial results and three errors. A separate top-ten case returned two items with eight missing; exhaustive reprocessing did not improve recovery. Synthetic tests do not repeat those real extractions. Real-media acceptance is an explicit, separate operation using `scripts/acceptance-real.mjs`, the network and existing models. Its database stays under `.cache/delivery-7/real/`.
-
-Historical delivery checks remain in `scripts/verify-delivery-1.mjs` through `scripts/verify-delivery-7.mjs`. Some require the sibling extractor, Chrome/Edge or free ports 3210/4200. Historical reports stay local because they may contain personal video metadata.
-
-</details>
-
-## Project structure
-
-- `apps/web/`: Angular interface, shared screens and isolated demo runtime.
-- `apps/api/`: local API, SQLite persistence, queue, extractor adapter and place agent.
-- `packages/contracts/`: API contracts, extractor schemas and generated types.
-- `scripts/`: Windows setup, startup, verification and maintenance tools.
-- `tests/`: synthetic fixtures, unit tests and browser journeys.
-- `assets/readme/`: reviewed screenshots of the public demo.
-
-The local app uses HTTP and SSE on one loopback origin. A sequential worker invokes the existing extractor and stores results in SQLite.
-
-## Privacy and local data
-
-Application data defaults to `data/savedex.sqlite`. Set `SAVEDEX_DATABASE` to use another persistent location. Relative paths resolve against the repository root. The root `.env` is loaded independently of the launch directory; existing environment variables take precedence. To back up data, stop the server and copy the database together with its associated SQLite files.
-
-Keep real libraries, extracted media metadata, credentials, environment files, browser profiles and generated reports private. `.gitignore` excludes `.env`, databases, `data/`, `.cache/`, local tools and historical `docs/` reports. The screenshots above contain only the demo's illustrative dataset. The extractor's bundled schema license is included at `packages/contracts/schemas/EXTRACTOR-LICENSE`; dependencies retain their own licenses.
-
-## Tentative roadmap
-
-- **V2:** library organization, more flexible search and multi-URL import.
-- **V3:** review tools and tracking for incomplete collections.
-- **V4:** packaged local distribution and portable storage.
-
-These items are outside V1. Further Output refinement is planned for a later phase.
+Application data stays in a local SQLite database by default. Place research uses the installed Codex CLI and its existing ChatGPT session, consumes session usage and consults web sources. See the [local app guide](LOCAL-APP.md#privacy-and-local-data) before working with a personal library.

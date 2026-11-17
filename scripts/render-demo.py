@@ -1,21 +1,32 @@
-"""Assemble actual UI screenshots into a labelled demonstration GIF."""
+"""Encode current demo browser captures as a README walkthrough (Pillow)."""
 import json
 from pathlib import Path
 from PIL import Image
 
 root = Path(__file__).resolve().parents[1]
-directory = root / '.cache/delivery-7/demo'
+directory = root / '.cache/demo-ui/walkthrough'
 manifest = json.loads((directory / 'manifest.json').read_text(encoding='utf-8'))
-frames = [Image.open(directory / f'{i:03}.png').convert('RGB') for i in range(manifest['frames'])]
-target = root / 'docs/demo/savedex.gif'
-target.parent.mkdir(parents=True, exist_ok=True)
-frames[0].save(target, save_all=True, append_images=frames[1:], duration=500, loop=0, optimize=False)
-with Image.open(target) as gif:
+captures = manifest['frames']
+assert captures, 'Run scripts/record-demo.mjs first'
+
+def frame(file):
+    with Image.open(file) as source:
+        return source.convert('RGB').resize((1008, 700), Image.Resampling.LANCZOS).quantize(colors=128)
+
+frames = [frame(root / 'assets/readme/explore.png')]
+durations = [2200]
+for index, capture in enumerate(captures):
+    frames.append(frame(directory / capture['file']))
+    following = captures[index + 1]['at'] if index + 1 < len(captures) else capture['at'] + 2200
+    durations.append(max(100, round((following - capture['at']) / 10) * 10))
+target = root / 'assets/readme/walkthrough.gif'
+frames[0].save(target, save_all=True, append_images=frames[1:], duration=durations, loop=0, optimize=True, disposal=2)
+with Image.open(target) as animation:
     duration = 0
-    for i in range(gif.n_frames):
-        gif.seek(i)
-        duration += gif.info['duration']
-    assert duration == 15000, duration
-    report = {**manifest, 'encoded_frames': gif.n_frames, 'encoded_duration_ms': duration, 'width': gif.width, 'height': gif.height}
-(root / 'docs/delivery-7-demo.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
+    for index in range(animation.n_frames):
+        animation.seek(index)
+        duration += animation.info['duration']
+    report = {'width': animation.width, 'height': animation.height, 'frames': animation.n_frames,
+              'duration_ms': duration, 'bytes': target.stat().st_size, 'simulation': True}
+(directory / 'encoded.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
 print(json.dumps(report))

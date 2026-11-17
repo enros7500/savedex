@@ -41,3 +41,25 @@ $env:SAVEDEX_DEMO_BASE_PATH='/savedex/'
 The browser test serves the app beneath the Pages subdirectory, checks the logo and full user journey, locates all five museums, verifies English despite a stored Spanish preference, checks mobile layout/reduced motion, tests reset/reload and rejects API/SSE/fetch calls. Explicit visitor clicks on Google Maps can open that external website.
 
 Generated bundles, local tools, environment files, historical reports and database files are excluded from Git. Screenshots published in the README use only the demo's illustrative dataset.
+
+## Refresh README media
+
+The README screenshots and animated walkthrough come from the same English, five-museum journey used by the demo browser check. Build the static demo first, then run:
+
+```powershell
+.\scripts\pnpm.ps1 build:demo:pages
+& .\.tools\node-v22.23.4-win-x64\node.exe scripts/record-demo.mjs
+python scripts/render-demo.py
+```
+
+Encoding requires Python with Pillow. Captures go to `assets/readme/`; temporary frames and animation metadata stay in `.cache/demo-ui/walkthrough/`. The recording starts with the fixed sample, follows simulated processing, reveals all five predefined research responses, and finishes on their map locations. The GIF opens with that final result before replaying the journey. Simulation notices remain visible.
+
+To run the browser checks against the published demo instead of a local server:
+
+```powershell
+$env:SAVEDEX_DEMO_URL='https://enros7500.github.io/savedex/'
+.\scripts\pnpm.ps1 test:e2e:demo
+Remove-Item Env:SAVEDEX_DEMO_URL
+```
+
+Keep `SAVEDEX_DEMO_URL` unset when capturing a fresh local build. The hosted check exercises the fixed demo, including all five research responses, populated map, mobile layout, reduced motion and reset/reload. It rejects fetch/SSE attempts and checks for external resources and browser errors; it never processes real videos or invokes models.
