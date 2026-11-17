@@ -14,6 +14,17 @@ test('uncertain coordinates do not become confirmed map positions',()=>{
  const row={video:{id:1,title:'Viaje',url:'https://youtu.be/AbC_123-xyz'},run:{id:1},result:{topic:{category:'travel'}},items:[{id:1,videoId:1,runId:1,type:'place',name:'Un lugar',description:'Mención',evidence:[],data:{location_mentioned:{value:null},coordinates_mentioned:{value:'34.5, 135.5',certainty:'uncertain'}}}]};
  assert.equal(catalog([row] as any)[0]!.coords,null);
 });
+
+test('agent enrichment locates a place without changing its identity, preferences or extraction',()=>{
+ const row={video:{id:1,title:'Viaje',url:'https://youtu.be/AbC_123-xyz'},run:{id:1},result:{topic:{category:'travel'}},items:[{id:1,videoId:1,runId:1,type:'place',name:'Templo',description:'Del vídeo',evidence:[],data:{location_mentioned:{value:'Kyoto',certainty:'known'},coordinates_mentioned:{value:null,certainty:'unknown'}}}]};
+ const before=catalog([row] as any)[0]!;
+ const enriched={...row,items:[{...row.items[0],enrichment:{status:'completed',result:{latitude:34.9948,longitude:135.785,address:'Kyoto, Japan'}}}]};
+ const after=catalog([enriched] as any)[0]!;
+ assert.deepEqual(after.coords,{lat:34.9948,lng:135.785});assert.equal(after.id,before.id);assert.deepEqual(after.preferenceKeys,before.preferenceKeys);
+ assert.equal(after.description,'Del vídeo');assert.equal(row.items[0]!.data.coordinates_mentioned.value,null);
+ const ambiguous={...row,items:[{...row.items[0],enrichment:{status:'needs_review',result:{latitude:null,longitude:null}}}]};
+ assert.equal(catalog([ambiguous] as any)[0]!.coords,null);
+});
 test('coordinates are explicit, finite and inside geographic bounds',()=>{
   assert.deepEqual(coordinates('34.6687, 135.5013'),{lat:34.6687,lng:135.5013});
   for(const v of [null,'Osaka','91, 25','0, 181','lat 34 approx','', '12, 45, 67'])assert.equal(coordinates(v),null);

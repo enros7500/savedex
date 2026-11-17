@@ -16,6 +16,7 @@
             "outputPath": "dist",
             "browser": "src/main.ts",
             "index": "src/index.html",
+            "assets": [{ "glob": "**/*", "input": "public" }],
             "tsConfig": "tsconfig.app.json",
             "styles": [
               "src/styles.css"
@@ -29,6 +30,12 @@
             ]
           },
           "configurations": {
+            "demo": {
+              "outputPath": "dist-demo",
+              "outputHashing": "all",
+              "fileReplacements": [{ "replace": "src/app/core/demo-config.ts", "with": "src/app/core/demo-config.demo.ts" }],
+              "optimization": { "scripts": true, "styles": { "minify": true, "inlineCritical": false }, "fonts": false }
+            },
             "production": {
               "outputHashing": "all",
               "optimization": {

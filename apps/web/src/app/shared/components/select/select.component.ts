@@ -663,8 +663,11 @@ export class ZardSelectComponent implements ControlValueAccessor, OnDestroy {
     this.portal = new TemplatePortal(this.dropdownTemplate(), this.viewContainerRef);
 
     this.overlayRef.attach(this.portal);
+    const viewportWidth = this.viewportRuler.getViewportSize().width - VIEWPORT_MARGIN * 2;
     this.overlayRef.updateSize({
-      ...(this.zPosition() === 'popper' ? { minWidth: hostWidth } : { width: hostWidth }),
+      ...(this.zPosition() === 'popper'
+        ? { width: Math.min(Math.max(hostWidth, 240), viewportWidth), maxWidth: viewportWidth }
+        : { width: hostWidth }),
       maxHeight: this.getAvailableContentHeight(),
     });
     this.isOpen.set(true);

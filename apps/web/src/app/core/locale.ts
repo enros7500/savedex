@@ -1,12 +1,14 @@
 import { Injectable, Pipe, PipeTransform, inject, signal } from '@angular/core';
 import { Language, languagePreference, translate } from './messages';
+import { DEMO_MODE } from './demo-config';
 
 @Injectable({providedIn:'root'})
 export class LocaleService {
-  readonly language = signal<Language>(this.read());
+  readonly language = signal<Language>(DEMO_MODE ? 'en' : this.read());
   constructor() { document.documentElement.lang = this.language(); }
   private read(): Language { try { return languagePreference(localStorage.getItem('savedex-language')); } catch { return 'en'; } }
   set(value: string): void {
+    if(DEMO_MODE)return;
     this.language.set(languagePreference(value));
     document.documentElement.lang = this.language();
     try { localStorage.setItem('savedex-language', this.language()); } catch { /* Session preference still works. */ }

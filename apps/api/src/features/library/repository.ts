@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3';
 import type { LibraryFilters, LibraryResult, LibraryItem, RunDetails, RunSummary } from '@savedex/contracts/api';
 import { VideoRepository } from '../videos/repository.js';
 import { RunRepository } from '../runs/repository.js';
+import { getEnrichment, placeKey } from '../place-agent/repository.js';
 
 function summary(run: RunDetails | undefined): RunSummary | null {
   if (!run) return null;
@@ -35,6 +36,7 @@ export class LibraryRepository {
         const items: LibraryItem[] = run ? this.db.prepare<[number], ItemRow>('SELECT * FROM items WHERE run_id=? ORDER BY id').all(run.id).map(item => {
           const evidenceIds = JSON.parse(item.evidence_ids_json) as string[];
           return { id: item.id, videoId: item.video_id, runId: item.run_id, extractorItemId: item.extractor_item_id,
+            enrichment: item.type==='place'?getEnrichment(this.db,placeKey(item)):null,
             type: item.type, name: item.name, description: item.description,
             data: JSON.parse(item.data_json) as LibraryItem['data'], evidenceIds,
             evidence: evidenceIds.map(evidenceId => {

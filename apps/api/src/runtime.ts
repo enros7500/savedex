@@ -15,7 +15,10 @@ import { safeProgress } from './extractor/safe-progress.js';
 import { loadConfig } from './config.js';
 import { buildServer } from './app.js';
 import { publicResult, publicSummary, publicRun } from './http-dto.js';
+import { PlaceAgentService } from './features/place-agent/service.js';
+import { researchWithCodex, type ResearchPort } from './features/place-agent/codex.js';
 export interface ApplicationOptions {
+  placeResearch?: ResearchPort;
   titleResolver?: (url: string) => Promise<string | null>;
   webRoot?: string;
   config?: AppConfig;
@@ -26,6 +29,7 @@ export interface ApplicationOptions {
   heartbeatMs?: number;
 }
 export interface ApiRuntime {
+  placeAgent: PlaceAgentService;
   queue: QueueService;
   events: EventStore;
   snapshot(): ApplicationSnapshot;
@@ -36,6 +40,7 @@ export interface ApiRuntime {
   close(): Promise<void>;
 }
 class Runtime implements ApiRuntime {
+  readonly placeAgent: PlaceAgentService;
   private readonly attemptedTitles = new Set<number>();
   private titlePump: Promise<void> | null = null;
   private readonly titleResolver: ApplicationOptions['titleResolver'];
@@ -50,6 +55,7 @@ class Runtime implements ApiRuntime {
       ...(options.eventCapacity !== undefined ? { capacity: options.eventCapacity } : {}),
       ...(options.eventMaxBytes !== undefined ? { maxBytes: options.eventMaxBytes } : {}),
     });
+    this.placeAgent = new PlaceAgentService(queue, options.placeResearch??(input=>researchWithCodex(input,options.config?.codexExecutable)));
     this.detach = queue.bindChanges({ advance: () => this.events.advance(), publish: () => { if (!this.closing) { this.events.publish(); this.scheduleTitles(); } } });
     this.scheduleTitles();
   }
@@ -57,7 +63,7 @@ class Runtime implements ApiRuntime {
     if (!this.titleResolver || this.closing || this.titlePump) return;
     this.titlePump = Promise.resolve().then(async () => {
       while (!this.closing) {
-        const video = this.snapshot().videos.find(v => v.platform === 'youtube' && !v.title && !this.attemptedTitles.has(v.id));
+        const video = this.snapshot().videos.find(v => !v.title && !this.attemptedTitles.has(v.id));
         if (!video) break;
         this.attemptedTitles.add(video.id);
         const title = await this.titleResolver!(video.url).catch(() => null);
@@ -103,11 +109,12 @@ class Runtime implements ApiRuntime {
   beginClose(): void {
     if (this.closing) return;
     this.closing = true;
+    this.placeAgent.beginClose();
     this.pendingClose = this.queue.close();
     // preClose must start stopping now, not after unrelated HTTP connections drain.
     void this.pendingClose.catch(() => {});
   }
-  async close(): Promise<void> { this.beginClose(); try { await this.pendingClose; } finally { this.detach(); this.events.close(); } }
+  async close(): Promise<void> { this.beginClose(); try { await Promise.all([this.pendingClose,this.placeAgent.whenIdle()]); } finally { this.detach(); this.events.close(); } }
 }
 export async function createApplication(options: ApplicationOptions = {}): Promise<{ app: FastifyInstance; runtime: ApiRuntime }> {
   const config = options.config ?? loadConfig();
@@ -116,7 +123,7 @@ export async function createApplication(options: ApplicationOptions = {}): Promi
   const extractor = options.extractorFactory?.(onProgress) ?? options.extractor ?? new CliAdapter({ ...config.extractor, onProgress });
   const queue = await Queue.open(config.database, extractor, { timezone: config.timezone, ...(config.externalInference ? {externalInference: config.externalInference} : {}) });
   try {
-    runtime = new Runtime(queue, options);
+    runtime = new Runtime(queue, { ...options,config });
     const app = buildServer(runtime, options.heartbeatMs,options.webRoot);
     return { app, runtime };
   } catch (error) { if (runtime) await runtime.close(); else await queue.close(); throw error; }

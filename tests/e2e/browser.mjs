@@ -17,14 +17,37 @@ export async function browser() {
     const portFile = path.join(profile, 'DevToolsActivePort');
     await until(() => existsSync(portFile), 'Chrome startup');
     const port = readFileSync(portFile, 'utf8').split('\n')[0];
-    const tabs = await fetch(`http://127.0.0.1:${port}/json`).then(r => r.json());
-    ws = new WebSocket(tabs.find(t => t.type === 'page').webSocketDebuggerUrl);
-    await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
-    let seq = 0; const pending = new Map(); const errors = [];
+    let target;
+    // DevToolsActivePort may exist before Chrome creates its first page target.
+    await until(async () => {
+      const tabs = await fetch(`http://127.0.0.1:${port}/json`, {signal:AbortSignal.timeout(5000)}).then(r => r.json());
+      target = tabs.find(t => t.type === 'page'); return !!target?.webSocketDebuggerUrl;
+    }, 'Chrome page target');
+    ws = new WebSocket(target.webSocketDebuggerUrl);
+    await new Promise((resolve, reject) => {
+      const timer=setTimeout(()=>reject(new Error('Chrome DevTools connection timeout')),10000);
+      ws.onopen=()=>{clearTimeout(timer);resolve();};ws.onerror=()=>{clearTimeout(timer);reject(new Error('Chrome DevTools connection failed'));};
+    });
+    let seq = 0, loaded = 0; const pending = new Map(); const errors = [];
     ws.onmessage = e => { const m = JSON.parse(e.data); if (m.id) { const p = pending.get(m.id); pending.delete(m.id); if (m.error) p?.reject(new Error(JSON.stringify(m.error))); else p?.resolve(m.result); }
+      if (m.method === 'Page.loadEventFired') loaded++;
       if (m.method === 'Runtime.exceptionThrown') errors.push(m.params.exceptionDetails.exception?.description ?? m.params.exceptionDetails.text);
       if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') errors.push(m.params.args.map(arg => arg.description ?? arg.value ?? '').join(' ')); };
-    const send = (method, params = {}) => new Promise((resolve, reject) => { const id = ++seq; pending.set(id, {resolve,reject}); ws.send(JSON.stringify({id,method,params})); });
+    ws.onclose=()=>{for(const p of pending.values())p.reject(new Error('Chrome DevTools connection closed'));pending.clear();};
+    const command = (method, params = {}) => new Promise((resolve, reject) => {
+      const id=++seq,timer=setTimeout(()=>{pending.delete(id);reject(new Error('Chrome command timeout: '+method));},15000);
+      pending.set(id,{resolve:value=>{clearTimeout(timer);resolve(value);},reject:error=>{clearTimeout(timer);reject(error);}});
+      ws.send(JSON.stringify({id,method,params}));
+    });
+    const send = async (method, params = {}) => {
+      const previous = loaded, result = await command(method, params);
+      // CDP acknowledges navigation before the old DOM disappears. Hash-only
+      // navigation has no loaderId and is settled by each route's own assertions.
+      if (method === 'Page.reload' || method === 'Page.navigate' && result.loaderId) {
+        await until(() => loaded > previous, 'page load after '+method);
+      }
+      return result;
+    };
     await send('Runtime.enable'); await send('Page.enable');
     await send('Emulation.setFocusEmulationEnabled', { enabled: true });
     const evaluate = async expression => { const r = await send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }); if(r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text); return r.result.value; };

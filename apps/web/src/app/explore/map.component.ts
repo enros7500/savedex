@@ -7,7 +7,7 @@ import type { Place } from './place-model';
 export function project(lat:number,lng:number){return{x:500+lng*1000/360,y:500-Math.log(Math.tan(Math.PI/4+Math.max(-84,Math.min(84,lat))*Math.PI/360))*1000/(2*Math.PI)};}
 @Component({selector:'sx-place-map',imports:[TranslatePipe,NgIcon],viewProviders:[labIcons()],template:`
 <div class="place-map" [class.is-dragging]="dragging()">
-<svg class="world-map" role="group" [attr.aria-label]="'Mapa de los lugares con coordenadas extraídas' | t" [attr.viewBox]="box()" (pointerdown)="start($event)" (pointermove)="move($event)" (pointerup)="stop($event)" (pointercancel)="stop($event)" (wheel)="wheel($event)">
+<svg class="world-map" role="group" [attr.aria-label]="'Mapa de lugares con ubicación' | t" [attr.viewBox]="box()" (pointerdown)="start($event)" (pointermove)="move($event)" (pointerup)="stop($event)" (pointercancel)="stop($event)" (wheel)="wheel($event)">
 <rect x="-10000" y="-10000" width="20000" height="20000" fill="#DFE8EC"/>
 <g class="map-land">@for(country of countries;track country.name){<path [attr.d]="country.path" vector-effect="non-scaling-stroke"/>}</g>
 @for(group of clusters();track group.id){<g class="map-marker" role="button" tabindex="0" [attr.aria-label]="(group.items.length>1?group.items.length+' lugares':group.items[0]!.name) | t" [attr.transform]="'translate('+group.x+' '+group.y+')'" (pointerdown)="$event.stopPropagation()" (click)="choose(group);$event.stopPropagation()" (keydown.enter)="choose(group)" (mouseenter)="highlight.emit(group.items[0]!.id)" (mouseleave)="highlight.emit(null)">
@@ -19,12 +19,13 @@ export function project(lat:number,lng:number){return{x:500+lng*1000/360,y:500-M
 <div class="map-label"><ng-icon name="lucideMap" size="14"/> {{"TUS DESCUBRIMIENTOS" | t}}</div>
 <div class="map-controls"><button [attr.aria-label]="'Acercar mapa' | t" [attr.title]="'Acercar' | t" (click)="zoom(.5)"><ng-icon name="lucidePlus" size="18"/></button><button [attr.aria-label]="'Alejar mapa' | t" [attr.title]="'Alejar' | t" (click)="zoom(2)"><ng-icon name="lucideMinus" size="18"/></button><button [attr.aria-label]="'Ajustar a resultados' | t" [attr.title]="'Ajustar a resultados' | t" (click)="fit()"><ng-icon name="lucideMaximize" size="16"/></button></div>
 @if(!points().length){<div class="map-empty"><span class="map-empty-icon"><ng-icon name="lucideMapPin" size="23"/></span><strong>{{(places().length?'Sin coordenadas disponibles':'El mundo está por descubrir') | t}}</strong><p>{{(places().length?'Los lugares aparecerán aquí cuando su resultado incluya coordenadas.':'Añade un vídeo y empieza a guardar lugares.') | t}}</p></div>}
-<div class="map-bottom"><span>@if(missing()){<ng-icon name="lucideCircleAlert" size="12"/> {{(missing()) | t}}{{" sin ubicación no se muestran en el mapa" | t}}}@else{{{"Solo ubicaciones extraídas del vídeo" | t}}}</span><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener noreferrer">{{"Natural Earth" | t}}</a></div></div>`})
+<div class="map-bottom"><span>@if(missing()){<ng-icon name="lucideCircleAlert" size="12"/> {{(missing()) | t}}{{" sin ubicación no se muestran en el mapa" | t}}}@else{{{(hasAgentLocations()?"Ubicaciones de la extracción y del agente":"Solo ubicaciones extraídas del vídeo") | t}}}</span><a href="https://www.naturalearthdata.com/about/terms-of-use/" target="_blank" rel="noopener noreferrer">{{"Natural Earth" | t}}</a></div></div>`})
 export class PlaceMapComponent implements AfterViewInit {
  readonly clusterItems=signal<Place[]>([]);
  readonly places=input<Place[]>([]);readonly hovered=input<string|null>(null);readonly focused=input<Place|null>(null);readonly open=output<Place>();readonly highlight=output<string|null>();
  readonly Math=Math;readonly countries=worldPaths;readonly nameOf=(p:Place)=>p.name;
  readonly view=signal({x:0,y:90,w:1000,h:640});readonly width=signal(700);readonly height=signal(600);readonly dragging=signal(false);private pointer:{x:number;y:number;view:ReturnType<PlaceMapComponent['view']>}|null=null;
+ readonly hasAgentLocations=computed(()=>this.points().some(p=>p.enrichment?.status==='completed'));
  readonly points=computed(()=>this.places().filter(p=>p.coords));readonly missing=computed(()=>this.places().length-this.points().length);
  readonly unit=computed(()=>Math.max(this.view().w/this.width(),this.view().h/this.height()));
  readonly box=computed(()=>{const v=this.view();return `${v.x} ${v.y} ${v.w} ${v.h}`;});

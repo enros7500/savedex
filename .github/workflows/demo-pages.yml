@@ -1,0 +1,71 @@
+name: Demo · GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/web/**'
+      - 'apps/api/**'
+      - 'packages/contracts/**'
+      - 'scripts/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig*.json'
+      - 'tests/demo-session.test.ts'
+      - 'tests/e2e/demo.mjs'
+      - 'tests/e2e/browser.mjs'
+      - '.github/workflows/demo-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build and verify isolated demo
+    runs-on: windows-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare pinned project tools
+        run: ./scripts/setup.ps1
+      - name: Strict types
+        run: ./scripts/pnpm.ps1 typecheck
+      - name: Synthetic unit tests
+        run: ./scripts/pnpm.ps1 test
+      - name: Build application and browser test support
+        run: ./scripts/pnpm.ps1 build
+      - name: Build static demo for /savedex/
+        run: ./scripts/pnpm.ps1 build:demo:pages
+      - name: Verify demo journey without real API or AI calls
+        env:
+          SAVEDEX_DEMO_BASE_PATH: /savedex/
+        run: ./scripts/pnpm.ps1 test:e2e:demo
+      - name: Upload only static demo assets
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: apps/web/dist-demo/browser
+
+  deploy:
+    name: Publish demo to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy verified demo
+        id: deployment
+        uses: actions/deploy-pages@v4

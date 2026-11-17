@@ -68,6 +68,27 @@ export interface LibraryItem {
   data: ExtractResult['items'][number]['data'];
   evidenceIds: string[];
   evidence: ExtractResult['evidence'];
+  enrichment?: PlaceEnrichment | null;
+}
+export interface PlaceResearch {
+  matched: boolean;
+  name: string;
+  address: string;
+  latitude: number | null;
+  longitude: number | null;
+  description: string;
+  sources: { title: string; url: string }[];
+  photos: { url: string; sourceUrl: string; attribution: string }[];
+  reason: string;
+}
+export interface PlaceEnrichment {
+  key: string;
+  status: 'running' | 'completed' | 'needs_review' | 'error';
+  model: string;
+  startedAt: string;
+  finishedAt: string | null;
+  result: PlaceResearch | null;
+  error: string | null;
 }
 export interface LibraryVideo {
   video: Video;

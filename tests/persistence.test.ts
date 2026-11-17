@@ -66,7 +66,7 @@ test('migra una base vacía, reabre sin perder datos y activa claves foráneas',
     const add = videos.addVideo('https://youtu.be/AbC_123-xyz');
     const reopened = s.reopen();
     assert.equal(reopened.videos.getVideo(add.video.id).url, 'https://www.youtube.com/watch?v=AbC_123-xyz');
-    assert.equal(s.db.pragma('user_version', { simple: true }), 3);
+    assert.equal(s.db.pragma('user_version', { simple: true }), 4);
     assert.equal(s.db.pragma('foreign_keys', { simple: true }), 1);
     assert.equal(s.db.pragma('integrity_check', { simple: true }), 'ok');
     assert.deepEqual(s.db.pragma('foreign_key_check'), []);

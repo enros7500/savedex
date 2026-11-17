@@ -8,6 +8,7 @@ import { runRoutes } from './features/runs/routes.js';
 import { StreamHub } from './features/events/stream.js';
 import { HttpError } from './http-errors.js';
 import { webRoutes } from './web.js';
+import { placeAgentRoutes } from './features/place-agent/routes.js';
 
 export function buildServer(runtime?: ApiRuntime, heartbeatMs?: number, webRoot?: string) {
   const app = Fastify({ bodyLimit: 65536, rewriteUrl: request => {
@@ -43,6 +44,7 @@ export function buildServer(runtime?: ApiRuntime, heartbeatMs?: number, webRoot?
     let closing = false;
     app.addHook('onSend', async (_request, reply, payload) => { if (closing) reply.header('connection', 'close'); return payload; });
     videoRoutes(app, runtime); queueRoutes(app, runtime); libraryRoutes(app, runtime); runRoutes(app, runtime);
+    placeAgentRoutes(app,runtime);
     const hub = new StreamHub(runtime.events, heartbeatMs);
     hub.route(app);
     app.addHook('preClose', async () => { closing = true; runtime.beginClose(); hub.close(); });

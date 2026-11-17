@@ -7,7 +7,7 @@ export const english: Record<string, string> = {
   'Lote terminado':'Batch finished',
   'Información sobre el límite de duración':'About the duration limit','Límite de duración':'Duration limit',
   'Máximo 5 minutos por vídeo, también en modo exhaustivo.':'Up to 5 minutes per video, including exhaustive mode.',
-  'Conexión con el servidor local de Savedex y sincronización de la cola.':'Connection to the local Savedex server and queue synchronization.',
+  'Conexión con el servidor local de SaveDex y sincronización de la cola.':'Connection to the local SaveDex server and queue synchronization.',
   'Pendientes':'Pending','Acciones del vídeo':'Video actions','Acciones':'Actions','Cerrar detalles':'Close details','Vista del vídeo':'Video view',
   'Resultado':'Result','Resultado mostrado':'Displayed result','Este vídeo se está procesando.':'This video is processing.','Todavía no hay un resultado válido.':'No valid result is available yet.',
   'intento':'attempt','intentos':'attempts','Intento':'Attempt','Tarea':'Task',
@@ -29,9 +29,9 @@ export const english: Record<string, string> = {
   'en espera en este lote':'waiting in this batch','Vídeos procesados del lote':'Processed videos in this batch',
   'completados':'completed','parciales':'partial','errores':'errors',
   'Biblioteca':'Library','Añadir':'Add','Procesado':'Processing','Añadir un vídeo':'Add a video',
-  'Saltar al contenido':'Skip to content','Savedex, añadir vídeo':'Savedex, add a video','Secciones de Savedex':'Savedex sections',
+  'Saltar al contenido':'Skip to content','SaveDex, añadir vídeo':'SaveDex, add a video','Secciones de SaveDex':'SaveDex sections',
   'Tu espacio de consulta.':'Your reference space.','Apariencia':'Appearance','Sistema':'System','Clara':'Light','Oscura':'Dark','Idioma':'Language',
-  'Conectado · Guardado local':'Connected · Stored locally','Conectando con Savedex…':'Connecting to Savedex…','Sincronizando estado…':'Syncing…',
+  'Conectado · Guardado local':'Connected · Stored locally','Conectando con SaveDex…':'Connecting to SaveDex…','Sincronizando estado…':'Syncing…',
   'Sin conexión · Mostrando el último estado conocido. La cola puede seguir trabajando.':'Disconnected · Showing the last known state. The queue may still be running.',
   'Cerrar aviso':'Dismiss message','Actividad global':'Global activity','Procesando':'Processing','Deteniendo al finalizar el vídeo':'Stopping after this video',
   'El vídeo activo terminará antes de detener la cola.':'The active video will finish before the queue stops.',
@@ -72,7 +72,7 @@ export const english: Record<string, string> = {
   'Preparando extracción':'Preparing extraction','Leyendo descripción':'Reading description','Transcribiendo audio':'Transcribing audio','Texto en pantalla':'On-screen text','Validando resultados':'Validating results','Guardando resultado':'Saving result',
   'Esperando el primer paso del extractor':'Waiting for the first extraction step','Descripción del autor':'Author description','Transcripción':'Transcript',
   'No se pudo completar la acción':'The action could not be completed','No se pudo completar la acción. Vuelve a intentarlo.':'The action could not be completed. Try again.',
-  'No se pudo conectar. Comprueba que Savedex sigue abierto.':'Could not connect. Check that Savedex is still running.','No se pudo añadir el vídeo':'Could not add the video',
+  'No se pudo conectar. Comprueba que SaveDex sigue abierto.':'Could not connect. Check that SaveDex is still running.','No se pudo añadir el vídeo':'Could not add the video',
   'Los resultados se están actualizando. Vuelve a cargar.':'Results are being updated. Reload to try again.','No se pudo cargar la Biblioteca':'Could not load the library',
   'El historial cambió. Vuelve a abrirlo.':'History has changed. Open it again.','No se pudo cargar el historial':'Could not load history',
   'Vídeo pendiente al final de la cola.':'Video added to the end of the queue.','Vídeo pendiente al final de la cola. Inicia la cola en Procesado.':'Video added to the end of the queue. Start the queue in Processing.',
@@ -107,6 +107,10 @@ export function translate(value: unknown, language: Language): string {
   if (added) return `${added[1]} videos added to the queue`;
   const places = /^(\d+) lugares · (.+)$/.exec(trimmed);
   if (places) return `${places[1]} places · ${translate(places[2], language)}`;
+  const available = /^(\d+) lugares? disponibles? de «(.+)»$/.exec(trimmed);
+  if (available) return `${available[1]} ${available[1]==='1'?'place':'places'} available from “${available[2]}”`;
+  const discarded = /^«(.+)» descartado$/.exec(trimmed);
+  if (discarded) return `“${discarded[1]}” discarded`;
   for (const [prefix,translation] of [['Guardar: ','Save: '],['Quitar de guardados: ','Unsave: '],['Guardado: ','Saved: '],['Quitado de guardados: ','Unsaved: '],['Ver ','View '],['Ubicación sin confirmar · ','Unconfirmed location · ']] as const) {
     if (text.startsWith(prefix)) return translation + text.slice(prefix.length);
   }

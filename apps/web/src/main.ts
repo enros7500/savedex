@@ -1,3 +1,4 @@
+import { DEMO_MODE } from './app/core/demo-config';
 import { provideZard } from './app/shared/core';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideRouter, withHashLocation, withInMemoryScrolling } from '@angular/router';
@@ -17,11 +18,13 @@ bootstrapApplication(ShellComponent,{providers:[provideZard(),provideRouter([
   {path:'add',loadComponent:()=>import('./app/add/add.component').then(m=>m.AddComponent)},
   {path:'processing',loadComponent:()=>import('./app/processing/processing.component').then(m=>m.ProcessingComponent)},
   {path:'explore',loadComponent:()=>import('./app/explore/explore.component').then(m=>m.ExploreComponent)},
-  {path:'results',loadComponent:()=>import('./app/library/library.component').then(m=>m.LibraryComponent)},
+  ...(DEMO_MODE
+    ? [{path:'results',pathMatch:'full' as const,redirectTo:'explore'}]
+    : [{path:'results',loadComponent:()=>import('./app/library/library.component').then(m=>m.LibraryComponent)}]),
   ...['anadir'].map(path=>({path,pathMatch:'full' as const,redirectTo:'add'})),
   ...['procesamiento','procesado'].map(path=>({path,pathMatch:'full' as const,redirectTo:'processing'})),
   ...['explorar','library','biblioteca'].map(path=>({path,pathMatch:'full' as const,redirectTo:'explore'})),
-  {path:'',pathMatch:'full',redirectTo:'explore'},
+  {path:'',pathMatch:'full',redirectTo:DEMO_MODE?'add':'explore'},
   {path:'**',redirectTo:'explore'},
 ],withHashLocation(),withInMemoryScrolling({scrollPositionRestoration:'top'})),{provide:LocationStrategy,useClass:LabHashLocationStrategy}]}).catch(console.error);
 

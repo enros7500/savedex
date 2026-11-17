@@ -46,6 +46,7 @@ try{
   assert.equal(await b.evaluate("document.querySelector('#language-select').value"),'es');
   await b.fill('#language-select','en');await b.waitText('Explore places');
   await b.send('Page.reload');await b.waitText('Explore places');
+  await until(()=>b.evaluate('!!document.querySelector(".explore-page")'),'explore content after reload');
   await b.evaluate("Promise.all(document.querySelector('.page-enter').getAnimations().map(a=>a.finished))");
   const screenshot=await b.send('Page.captureScreenshot',{format:'png'});await writeFile(join(output,'english-'+width+'.png'),Buffer.from(screenshot.data,'base64'));
   results.push({width,defaultEnglish:true,switchesWithoutReload:true,persistedBothLanguages:true,noHorizontalOverflow:true});

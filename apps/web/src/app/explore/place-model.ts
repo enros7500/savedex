@@ -1,4 +1,4 @@
-import type { ApiLibraryResult, LibraryItem } from '@savedex/contracts/api';
+import type { ApiLibraryResult, LibraryItem, PlaceEnrichment } from '@savedex/contracts/api';
 
 export const fold=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
 export const matchesSearch=(haystack:string,query:string)=>fold(query).trim().split(/\s+/).every(w=>fold(haystack).includes(w));
@@ -59,7 +59,7 @@ export const categories=[
 ];
 export type PlaceCategory=typeof categories[number];
 export interface PlaceSource {video:number;title:string;url:string;quote:string;time:number|null;run:number}
-export interface Place {id:string;preferenceKeys:string[];name:string;description:string;location:string;hint:boolean;coords:{lat:number;lng:number}|null;category:PlaceCategory;address:string;mapsUrl:string|null;sources:PlaceSource[];items:LibraryItem[];addedAt:string}
+export interface Place {id:string;preferenceKeys:string[];name:string;description:string;location:string;hint:boolean;coords:{lat:number;lng:number}|null;category:PlaceCategory;address:string;mapsUrl:string|null;sources:PlaceSource[];items:LibraryItem[];addedAt:string;enrichment?:PlaceEnrichment|null}
 export function fact(item:LibraryItem,key:string):string {
   const f=(item.data as Record<string,{value?:unknown;certainty?:string}>)[key];
   return f&&typeof f.value==='string'&&f.certainty!=='unknown'?f.value:'';
@@ -83,7 +83,12 @@ export function catalog(rows:ApiLibraryResult['videos']):Place[]{
     if(prior){prior.sources.push(...sources.filter(s=>!prior.sources.some(p=>p.video===s.video&&p.quote===s.quote&&p.time===s.time)));prior.items.push(item);prior.preferenceKeys.push(preferenceKey);}
     else result.set(id,{id,preferenceKeys:[preferenceKey],name:item.name,description:item.description,location,hint:f?.certainty!=='known',coords,category,address,mapsUrl:safeUrl(fact(item,'maps_url_mentioned')),sources,items:[item],addedAt:row.video.addedAt});
   }
-  return [...result.values()];
+  return [...result.values()].map(place=>{
+    const jobs=place.items.flatMap(item=>item.enrichment?[item.enrichment]:[]);
+    const enrichment=jobs.find(j=>j.status==='completed')??jobs.find(j=>j.status==='running')??jobs[0]??null;
+    const research=enrichment?.status==='completed'?enrichment.result:null;
+    return {...place,enrichment,...(research?{coords:{lat:research.latitude!,lng:research.longitude!},address:research.address||place.address}: {})};
+  });
 }
 export function placeSearch(p:Place):string {
   return [p.name,p.description,p.location,p.address,p.category.label,p.category.terms,...p.sources.flatMap(s=>[s.title,s.quote])].join(' ').replace(/Jap[oó]n|Japan/gi,'Japón Japan').replace(/Ciudad de M[eé]xico|CDMX/gi,'Ciudad de México CDMX');
