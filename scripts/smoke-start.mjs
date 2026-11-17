@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { createServer } from 'node:net';
-import { mkdtempSync,rmSync,writeFileSync } from 'node:fs';
+import { mkdirSync,mkdtempSync,rmSync,writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { ownedProcess } from './lib/owned-process.mjs';
@@ -19,5 +19,6 @@ try{
   child=ownedProcess(process.execPath,[path.join(root,'apps/api/dist/server.js')],{cwd:directory,env});await ready();snapshot=await fetch(base+'/api/queue').then(r=>r.json());
   assert.equal(snapshot.queue.workerStatus,'idle');assert.equal(snapshot.queue.entries.filter(e=>e.state==='pending').length,1);assert.equal(snapshot.runs.length,0);assert.notEqual(snapshot.streamId,stamp.streamId);assert.ok(snapshot.revision>stamp.revision);
   const report={verified_at:new Date().toISOString(),entry:'scripts/start.ps1 from a different working directory',web_status:page.status,api_status:200,single_origin:true,persistent_pending_after_restart:1,automatic_runs:0,revision_persisted:true,stream_changed:true,configured_port:port};
-  writeFileSync(path.join(root,'docs/delivery-7-start.json'),JSON.stringify(report,null,2)+'\n');writeFileSync(path.join(root,'.cache/delivery-7/start.log'),output);console.log(JSON.stringify(report,null,2));
+  const reportDirectory=path.join(root,'.cache/delivery-7');mkdirSync(reportDirectory,{recursive:true});
+  writeFileSync(path.join(reportDirectory,'start.json'),JSON.stringify(report,null,2)+'\n');writeFileSync(path.join(reportDirectory,'start.log'),output);console.log(JSON.stringify(report,null,2));
 }finally{if(child)await child.stop();rmSync(directory,{recursive:true,force:true});}
